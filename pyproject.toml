@@ -1,0 +1,44 @@
+[project]
+name = "glucobalance"
+version = "0.1.0"
+description = "GlucoBalanceApp: a companion app for people with Type 1 diabetes."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# ---------- ruff: lint + format ----------
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort (import order)
+    "B",   # flake8-bugbear (likely bugs)
+    "UP",  # pyupgrade (modern syntax)
+    "SIM", # flake8-simplify
+]
+
+# ---------- mypy: type checking ----------
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+
+# ---------- pytest ----------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers", "--strict-config"]
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.0",
+    "pytest>=9.1.1",
+    "ruff>=0.16.10",
+]
