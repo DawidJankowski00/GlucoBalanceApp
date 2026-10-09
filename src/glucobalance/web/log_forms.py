@@ -12,7 +12,8 @@ from zoneinfo import ZoneInfo
 
 from glucobalance.entries import EntryError
 from glucobalance.glucose_service import GlucoseEntry
-from glucobalance.models import DisplayUnit, DoseKind, GlucoseTag, InsulinType
+from glucobalance.hypo_service import HypoInput
+from glucobalance.models import DisplayUnit, DoseKind, GlucoseTag, HypoTreatmentKind, InsulinType
 from glucobalance.treatment_service import CarbInput, DoseInput
 from glucobalance.units import mmoll_to_mgdl
 
@@ -92,5 +93,20 @@ def parse_carb_form(form: Mapping[str, str], zone: ZoneInfo) -> CarbInput:
         grams=_number(form.get("grams", ""), "Enter the carbs in grams."),
         eaten_at=parse_local_datetime(form.get("eaten_at", ""), zone),
         description=form.get("description", "").strip() or None,
+        confirmed=_confirmed(form),
+    )
+
+
+def parse_hypo_form(form: Mapping[str, str], zone: ZoneInfo) -> HypoInput:
+    try:
+        treatment = HypoTreatmentKind(form.get("treatment", ""))
+    except ValueError:
+        raise EntryError("Choose what you took.") from None
+    raw_grams = form.get("carbs_grams", "").strip()
+    return HypoInput(
+        treatment=treatment,
+        treated_at=parse_local_datetime(form.get("treated_at", ""), zone),
+        carbs_grams=_number(raw_grams, "Enter the carbs in grams.") if raw_grams else None,
+        note=form.get("note", "").strip() or None,
         confirmed=_confirmed(form),
     )

@@ -15,7 +15,9 @@ from glucobalance.db import Base
 from glucobalance.models import (
     BodySite,
     CarbEntry,
+    FavouriteMeal,
     GlucoseReading,
+    HypoTreatment,
     InsulinDose,
     Note,
     Reminder,
@@ -90,6 +92,20 @@ class GlucoseRepository(Repository[GlucoseReading]):
             .order_by(GlucoseReading.measured_at.desc())
             .limit(limit)
         ).all()
+
+    def latest_between(self, user_id: int, start: datetime, end: datetime) -> GlucoseReading | None:
+        """The newest reading in ``[start, end)``, or None."""
+        _check_range(start, end)
+        return self.session.scalars(
+            select(GlucoseReading)
+            .where(
+                GlucoseReading.user_id == user_id,
+                GlucoseReading.measured_at >= start,
+                GlucoseReading.measured_at < end,
+            )
+            .order_by(GlucoseReading.measured_at.desc())
+            .limit(1)
+        ).first()
 
     def add_new(self, readings: Iterable[GlucoseReading]) -> int:
         """Add readings not stored yet (same user, source and time); return how many were added.
@@ -200,4 +216,69 @@ class ReminderRepository(Repository[Reminder]):
             select(Reminder)
             .where(Reminder.user_id == user_id, Reminder.active.is_(True))
             .order_by(Reminder.id)
+        ).all()
+
+
+class FavouriteRepository(Repository[FavouriteMeal]):
+    model = FavouriteMeal
+
+    def for_user(self, user_id: int) -> Sequence[FavouriteMeal]:
+        """The user's favourites, sorted by name ignoring case."""
+        return self.session.scalars(
+            select(FavouriteMeal)
+            .where(FavouriteMeal.user_id == user_id)
+            .order_by(func.lower(FavouriteMeal.name), FavouriteMeal.id)
+        ).all()
+
+    def get_owned(self, user_id: int, favourite_id: int) -> FavouriteMeal | None:
+        return self.session.scalars(
+            select(FavouriteMeal).where(
+                FavouriteMeal.id == favourite_id, FavouriteMeal.user_id == user_id
+            )
+        ).one_or_none()
+
+    def find_by_name(self, user_id: int, name: str) -> FavouriteMeal | None:
+        """The user's favourite with this name, ignoring case."""
+        return self.session.scalars(
+            select(FavouriteMeal).where(
+                FavouriteMeal.user_id == user_id, func.lower(FavouriteMeal.name) == name.lower()
+            )
+        ).first()
+
+    def count(self, user_id: int) -> int:
+        return (
+            self.session.scalar(
+                select(func.count())
+                .select_from(FavouriteMeal)
+                .where(FavouriteMeal.user_id == user_id)
+            )
+            or 0
+        )
+
+    def delete(self, favourite: FavouriteMeal) -> None:
+        self.session.delete(favourite)
+        self.session.flush()
+
+
+class HypoRepository(Repository[HypoTreatment]):
+    model = HypoTreatment
+
+    def between(self, user_id: int, start: datetime, end: datetime) -> Sequence[HypoTreatment]:
+        _check_range(start, end)
+        return self.session.scalars(
+            select(HypoTreatment)
+            .where(
+                HypoTreatment.user_id == user_id,
+                HypoTreatment.treated_at >= start,
+                HypoTreatment.treated_at < end,
+            )
+            .order_by(HypoTreatment.treated_at)
+        ).all()
+
+    def recent(self, user_id: int, limit: int) -> Sequence[HypoTreatment]:
+        return self.session.scalars(
+            select(HypoTreatment)
+            .where(HypoTreatment.user_id == user_id)
+            .order_by(HypoTreatment.treated_at.desc(), HypoTreatment.id.desc())
+            .limit(limit)
         ).all()

@@ -1,6 +1,7 @@
 """Logging pages: quick manual entry of glucose readings, insulin doses and carbs."""
 
 from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -8,6 +9,8 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from glucobalance.entries import EntryError, PossibleDuplicate
+from glucobalance.favourites import add_favourite, delete_favourite, list_favourites, log_favourite
+from glucobalance.foods import carbs_for_portion
 from glucobalance.glucose_service import (
     is_low,
     log_reading,
@@ -214,6 +217,7 @@ async def save_insulin(
 def _carbs_page(
     request: Request,
     templates: Templates,
+    db: DbSession,
     user: User,
     values: dict[str, str],
     *,
@@ -221,6 +225,15 @@ def _carbs_page(
     ask_confirm: bool = False,
     status_code: int = 200,
 ) -> HTMLResponse:
+    favourites = [
+        {
+            "id": meal.id,
+            "name": meal.name,
+            "grams": format(meal.grams.normalize(), "f"),
+            "description": meal.description,
+        }
+        for meal in list_favourites(db, user)
+    ]
     return render(
         request,
         templates,
@@ -228,14 +241,32 @@ def _carbs_page(
         user,
         status_code=status_code,
         values=values,
+        favourites=favourites,
         ask_confirm=ask_confirm,
         error=error,
     )
 
 
+def _prefill_from_food(description: str, per100: str, portion: str) -> dict[str, str]:
+    """Form values for a food picked in the search: its name and the carbs of the portion."""
+    values = {"description": description.strip()[:200]}
+    try:
+        grams = carbs_for_portion(Decimal(per100), Decimal(portion))
+    except (InvalidOperation, EntryError):
+        return values
+    values["grams"] = format(grams, "f")
+    return values
+
+
 @router.get("/carbs", response_model=None)
 def carbs_form(
-    request: Request, user: CurrentUser, templates: Templates
+    request: Request,
+    user: CurrentUser,
+    db: DbSession,
+    templates: Templates,
+    description: str = "",
+    per100: str = "",
+    portion: str = "",
 ) -> HTMLResponse | RedirectResponse:
     settings = user.settings
     if settings is None:
@@ -244,8 +275,11 @@ def carbs_form(
         "grams": "",
         "eaten_at": local_input_value(_now(), _zone(settings)),
         "description": "",
+        "favourite_name": "",
     }
-    return _carbs_page(request, templates, user, values)
+    if description or per100:
+        values.update(_prefill_from_food(description, per100, portion))
+    return _carbs_page(request, templates, db, user, values)
 
 
 @router.post("/carbs", response_model=None)
@@ -264,13 +298,60 @@ async def save_carbs(
         return _carbs_page(
             request,
             templates,
+            db,
             user,
             form,
             error=str(error),
             ask_confirm=isinstance(error, PossibleDuplicate),
             status_code=422,
         )
+    grams = format(entry.grams.normalize(), "f")
+    message = f"Saved {grams} g at {entry.eaten_at.astimezone(zone):%H:%M}."
+    favourite_name = form.get("favourite_name", "").strip()
+    if favourite_name:
+        try:
+            add_favourite(db, user, favourite_name, entry.grams, entry.description)
+            message += f" Saved as favourite meal {favourite_name}."
+        except EntryError as problem:
+            message += f" Not saved as a favourite: {problem}"
+    db.commit()
+    request.session["flash"] = message
+    return RedirectResponse("/log/carbs", status_code=303)
+
+
+@router.post("/favourites/{favourite_id}/log", response_model=None)
+def log_favourite_now(
+    favourite_id: int, request: Request, user: CurrentUser, db: DbSession, templates: Templates
+) -> HTMLResponse | RedirectResponse:
+    settings = user.settings
+    if settings is None:
+        return RedirectResponse("/onboarding/1", status_code=303)
+    zone = _zone(settings)
+    try:
+        entry = log_favourite(db, user, favourite_id, now=_now())
+    except EntryError as error:
+        db.rollback()
+        message = str(error)
+        if isinstance(error, PossibleDuplicate):
+            message += " Use the form below and tick the box if you ate it twice."
+        values = {
+            "grams": "",
+            "eaten_at": local_input_value(_now(), zone),
+            "description": "",
+            "favourite_name": "",
+        }
+        return _carbs_page(request, templates, db, user, values, error=message, status_code=422)
     db.commit()
     grams = format(entry.grams.normalize(), "f")
     request.session["flash"] = f"Saved {grams} g at {entry.eaten_at.astimezone(zone):%H:%M}."
+    return RedirectResponse("/log/carbs", status_code=303)
+
+
+@router.post("/favourites/{favourite_id}/delete", response_model=None)
+def delete_favourite_now(
+    favourite_id: int, request: Request, user: CurrentUser, db: DbSession
+) -> RedirectResponse:
+    if delete_favourite(db, user, favourite_id):
+        db.commit()
+        request.session["flash"] = "Favourite meal deleted."
     return RedirectResponse("/log/carbs", status_code=303)

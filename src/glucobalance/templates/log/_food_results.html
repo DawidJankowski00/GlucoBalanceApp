@@ -1,0 +1,21 @@
+{% if message %}
+<p class="mt-2 text-sm text-slate-600">{{ message }}</p>
+{% else %}
+<ul class="mt-2 divide-y divide-slate-200 rounded border border-slate-200 bg-white text-sm">
+  {% for food in foods %}
+  <li class="p-2">
+    <form method="get" action="/log/carbs" class="flex flex-wrap items-center gap-2" hx-boost="false">
+      <span class="grow">
+        <span class="font-medium">{{ food.name }}</span>{% if food.brand %} <span class="text-slate-500">· {{ food.brand }}</span>{% endif %}
+        <span class="block text-xs text-slate-500">{{ food.carbs_per_100g.normalize()|string }} g carbs per 100 g</span>
+      </span>
+      <input type="hidden" name="description" value="{{ food.name }}">
+      <input type="hidden" name="per100" value="{{ food.carbs_per_100g.normalize()|string }}">
+      <label class="text-xs">Portion (g) <input class="w-20 rounded border border-slate-300 px-2 py-1" name="portion" value="100" inputmode="decimal"></label>
+      <button class="rounded bg-teal-700 px-3 py-1 text-white hover:bg-teal-800">Use</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+<p class="mt-1 text-xs text-slate-500">Food data comes from Open Food Facts and can be wrong. Check the number before you save.</p>
+{% endif %}

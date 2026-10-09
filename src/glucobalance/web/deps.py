@@ -8,6 +8,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from glucobalance.foods import FoodSource
 from glucobalance.models import User
 
 SESSION_USER_KEY = "user_id"
@@ -32,6 +33,11 @@ def get_templates(request: Request) -> Jinja2Templates:
     return templates
 
 
+def get_food_source(request: Request) -> FoodSource:
+    source: FoodSource = request.app.state.food_source
+    return source
+
+
 def current_user(request: Request, db: Annotated[Session, Depends(get_db)]) -> User:
     user_id = request.session.get(SESSION_USER_KEY)
     user = db.get(User, user_id) if isinstance(user_id, int) else None
@@ -44,3 +50,4 @@ def current_user(request: Request, db: Annotated[Session, Depends(get_db)]) -> U
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(current_user)]
 Templates = Annotated[Jinja2Templates, Depends(get_templates)]
+FoodSources = Annotated[FoodSource, Depends(get_food_source)]
