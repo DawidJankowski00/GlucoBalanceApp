@@ -5,7 +5,7 @@ A "day" runs from local midnight to the next local midnight, so it lasts 23 or 2
 the days the clocks change.
 """
 
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from enum import StrEnum
@@ -65,11 +65,33 @@ def day_bounds(day: date, zone: ZoneInfo) -> tuple[datetime, datetime]:
     return start.astimezone(UTC), end.astimezone(UTC)
 
 
+def load_range(
+    session: Session,
+    user_id: int,
+    start: datetime,
+    end: datetime,
+    kinds: Collection[EntryKind] = frozenset(EntryKind),
+) -> list[TimelineItem]:
+    """The timeline between two UTC moments (``start`` included, ``end`` excluded).
+
+    Only the tables for the requested ``kinds`` are read.
+    """
+    return build_timeline(
+        readings=GlucoseRepository(session).between(user_id, start, end)
+        if EntryKind.GLUCOSE in kinds
+        else [],
+        doses=InsulinRepository(session).between(user_id, start, end)
+        if EntryKind.INSULIN in kinds
+        else [],
+        carbs=CarbRepository(session).between(user_id, start, end)
+        if EntryKind.CARBS in kinds
+        else [],
+        notes=NoteRepository(session).between(user_id, start, end)
+        if EntryKind.NOTE in kinds
+        else [],
+    )
+
+
 def load_day(session: Session, user_id: int, day: date, zone: ZoneInfo) -> list[TimelineItem]:
     start, end = day_bounds(day, zone)
-    return build_timeline(
-        readings=GlucoseRepository(session).between(user_id, start, end),
-        doses=InsulinRepository(session).between(user_id, start, end),
-        carbs=CarbRepository(session).between(user_id, start, end),
-        notes=NoteRepository(session).between(user_id, start, end),
-    )
+    return load_range(session, user_id, start, end)
