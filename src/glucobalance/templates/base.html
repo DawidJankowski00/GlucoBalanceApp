@@ -20,6 +20,7 @@
       {% if user and user.settings %}
       <div class="flex items-center gap-4 text-sm">
         <a href="/" class="hover:underline">Home</a>
+        {% if flags and flags.cgm_import %}<a href="/live" class="hover:underline">Live</a>{% endif %}
         <a href="/today" class="hover:underline">Today</a>
         <a href="/log/glucose" class="hover:underline">Log</a>
         <a href="/chart" class="hover:underline">Chart</a>

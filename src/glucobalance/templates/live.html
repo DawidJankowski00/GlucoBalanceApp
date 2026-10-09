@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Live · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="mb-4 flex items-baseline justify-between">
+  <h1 class="text-2xl font-semibold">Live glucose</h1>
+  <a class="text-sm text-teal-700 underline" href="/settings/cgm">CGM connection</a>
+</div>
+{% if not cgm %}
+<p class="rounded border border-slate-200 bg-white p-4 text-slate-700">The live view is for CGM users. Switch glucose monitoring to CGM in <a class="underline" href="/settings">Settings</a> to use it.</p>
+{% else %}
+<div hx-get="/live/panel" hx-trigger="every 60s" hx-swap="innerHTML">
+  {% include "_live_panel.html" %}
+</div>
+{% endif %}
+{% endblock %}
