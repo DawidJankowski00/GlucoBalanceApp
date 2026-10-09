@@ -79,8 +79,8 @@ Each stage ends with something that can be demonstrated.
 - [x] **Stage 0: Foundations.** Project tooling, FastAPI skeleton, Docker Compose, CI.
 - [x] **Stage 1: Domain model and data layer.** Core entities, migrations, simulated seed data.
 - [x] **Stage 2: Accounts, onboarding and settings.** Sign-up, the two settings, feature flags.
-- [ ] **Stage 3: Glucose logging.** Manual entry, insulin and carb logging, daily charts.
-- [ ] **Stage 4: Site rotation engine.** Next-site suggestions for pump and pens, blocked sites, body map.
+- [x] **Stage 3: Glucose logging.** Manual entry, insulin and carb logging, daily charts.
+- [x] **Stage 4: Site rotation engine.** Next-site suggestions for pump and pens, blocked sites, body map.
 - [ ] **Stage 5: Reminders and notifications.** Scheduled reminders and Web Push.
 - [ ] **Stage 6: CGM integration.** LibreLinkUp client and simulator source.
 - [ ] **Stage 7: Analytics and reports.** Time in range, glucose profile, pattern detection, PDF report.

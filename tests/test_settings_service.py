@@ -73,6 +73,10 @@ def test_valid_input_passes() -> None:
         ),
         ({"time_blocks": (TimeBlockInput(time(0, 0), Decimal("0"), 40),)}, "carb ratio"),
         ({"time_blocks": (TimeBlockInput(time(0, 0), Decimal("10"), 2),)}, "sensitivity"),
+        ({"site_rest_days": 2}, "rest"),
+        ({"site_rest_days": 61}, "rest"),
+        ({"set_change_days": 0}, "set change"),
+        ({"set_change_days": 8}, "set change"),
         ({"timezone": "Mars/Olympus_Mons"}, "time zone"),
         ({"timezone": ""}, "time zone"),
         ({"timezone": "../etc/passwd"}, "time zone"),
@@ -158,3 +162,24 @@ def test_timezone_defaults_to_utc_and_changes_are_logged(session: Session, user:
         "UTC",
         "Europe/Warsaw",
     )
+
+
+def test_rotation_settings_default_to_14_and_3_days() -> None:
+    data = make_input()
+    assert (data.site_rest_days, data.set_change_days) == (14, 3)
+
+
+def test_changing_the_rest_period_is_logged(user: User, session: Session) -> None:
+    apply_settings(session, user, make_input(), ChangeSource.ONBOARDING, user)
+    apply_settings(
+        session,
+        user,
+        replace(make_input(), site_rest_days=21, set_change_days=2),
+        ChangeSource.USER,
+        user,
+    )
+
+    assert user.settings is not None
+    assert (user.settings.site_rest_days, user.settings.set_change_days) == (21, 2)
+    changed = {(c.field, c.old_value, c.new_value) for c in history(session, user)[:2]}
+    assert changed == {("site_rest_days", "14", "21"), ("set_change_days", "3", "2")}

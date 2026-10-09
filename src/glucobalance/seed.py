@@ -22,9 +22,7 @@ from sqlalchemy.orm import Session
 from glucobalance.config import get_settings
 from glucobalance.db import make_engine, make_session_factory
 from glucobalance.models import (
-    BodySide,
     BodySite,
-    BodyView,
     CarbEntry,
     DeliveryMode,
     DoseKind,
@@ -44,6 +42,7 @@ from glucobalance.models import (
     UserSettings,
 )
 from glucobalance.repositories import GlucoseRepository, SiteRepository, UserRepository
+from glucobalance.sitemap import seed_body_sites
 
 DEMO_EMAIL = "demo-pump-cgm@example.com"
 PUMP_STEP = Decimal("0.05")
@@ -122,24 +121,10 @@ def simulate(
 
 
 # Stage 4 replaces this with the full body map.
-_SITE_LAYOUT = [
-    (SiteRegion.ABDOMEN, BodyView.FRONT, 4),
-    (SiteRegion.THIGH, BodyView.FRONT, 2),
-    (SiteRegion.ARM, BodyView.BACK, 1),
-    (SiteRegion.BUTTOCK, BodyView.BACK, 1),
-]
-
-
 def ensure_body_sites(session: Session) -> Sequence[BodySite]:
-    """Create the basic body sites if missing; return all sites ordered by code."""
-    sites = SiteRepository(session)
-    for region, view, count in _SITE_LAYOUT:
-        for side in BodySide:
-            for number in range(1, count + 1):
-                code = f"{region}-{side}-{number}"
-                if sites.get_by_code(code) is None:
-                    sites.add(BodySite(code=code, region=region, side=side, view=view))
-    return sites.all()
+    """Load the body map if missing; return all sites ordered by code."""
+    seed_body_sites(session)
+    return SiteRepository(session).all()
 
 
 def _demo_settings(user: User) -> UserSettings:

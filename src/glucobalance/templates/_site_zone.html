@@ -1,0 +1,38 @@
+{% from "_macros.html" import button %}
+<section class="space-y-3 rounded border border-slate-200 bg-slate-50 p-3 text-sm">
+  <h3 class="font-medium">{{ zone.label }}</h3>
+  <p class="text-slate-600">Used {{ zone.count }} time{% if zone.count != 1 %}s{% endif %} in the last {{ days }} days.</p>
+  {% if zone.block %}
+  <p>Not available {% if zone.block.until %}until {{ zone.block.until.strftime("%d %b %Y") }}{% else %}until you remove it{% endif %}{% if zone.block.reason %} · {{ zone.block.reason }}{% endif %}.</p>
+  <form method="post" action="/sites/unblock">
+    <input type="hidden" name="code" value="{{ zone.code }}">
+    {{ button("Make available") }}
+  </form>
+  {% else %}
+  <div class="flex flex-wrap gap-2">
+    {% for purpose, label in zone.purposes %}
+    <form method="post" action="/sites/use">
+      <input type="hidden" name="code" value="{{ zone.code }}">
+      <input type="hidden" name="purpose" value="{{ purpose }}">
+      {{ button("Log " ~ label|lower ~ " here") }}
+    </form>
+    {% endfor %}
+  </div>
+  <form method="post" action="/sites/block" class="flex flex-wrap items-end gap-2">
+    <input type="hidden" name="code" value="{{ zone.code }}">
+    <label><span class="block text-xs">Not available until (optional)</span>
+      <input type="date" name="until" class="rounded border border-slate-300 px-2 py-1"></label>
+    <label><span class="block text-xs">Reason (optional)</span>
+      <input type="text" name="reason" maxlength="100" class="rounded border border-slate-300 px-2 py-1"></label>
+    <button class="rounded border border-slate-300 bg-white px-3 py-1">Mark not available</button>
+  </form>
+  {% endif %}
+  <form method="post" action="/sites/weight" class="flex flex-wrap items-end gap-2">
+    <input type="hidden" name="code" value="{{ zone.code }}">
+    <label><span class="block text-xs">How often</span>
+      <select name="weight" class="rounded border border-slate-300 px-2 py-1">
+        {% for value, label in weight_options.items() %}<option value="{{ value }}" {% if value == zone.weight %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    <button class="rounded border border-slate-300 bg-white px-3 py-1">Save preference</button>
+  </form>
+</section>

@@ -56,6 +56,8 @@ class SettingsInput:
     clinician_contact: str | None
     time_blocks: tuple[TimeBlockInput, ...]
     timezone: str = "UTC"
+    site_rest_days: int = 14
+    set_change_days: int = 3
 
 
 def is_valid_timezone(name: str) -> bool:
@@ -83,6 +85,10 @@ def validate(data: SettingsInput) -> None:
         raise SettingsError("The dose step must be 0.05, 0.1, 0.5 or 1 unit.")
     if not is_valid_timezone(data.timezone):
         raise SettingsError("Choose a time zone such as Europe/Warsaw.")
+    if not 3 <= data.site_rest_days <= 60:
+        raise SettingsError("The site rest period must be between 3 and 60 days.")
+    if not 1 <= data.set_change_days <= 7:
+        raise SettingsError("The set change interval must be between 1 and 7 days.")
     _validate_blocks(data.time_blocks)
 
 
@@ -129,6 +135,8 @@ _FIELDS: tuple[str, ...] = (
     "dose_step_units",
     "clinician_contact",
     "timezone",
+    "site_rest_days",
+    "set_change_days",
 )
 
 
@@ -210,6 +218,8 @@ def to_input(settings: UserSettings) -> SettingsInput:
         dose_step_units=settings.dose_step_units,
         clinician_contact=settings.clinician_contact,
         timezone=settings.timezone,
+        site_rest_days=settings.site_rest_days,
+        set_change_days=settings.set_change_days,
         time_blocks=tuple(
             TimeBlockInput(b.start_time, b.icr_grams_per_unit, b.isf_mgdl)
             for b in settings.time_blocks

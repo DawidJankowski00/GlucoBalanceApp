@@ -23,6 +23,8 @@ FIELD_LABELS = {
     "dose_step_units": "Dose step (units)",
     "clinician_contact": "Clinician contact",
     "timezone": "Time zone",
+    "site_rest_days": "Site rest period (days)",
+    "set_change_days": "Infusion set change (days)",
     "time_blocks": "Carb ratio and sensitivity blocks (mg/dL)",
 }
 SOURCE_LABELS = {

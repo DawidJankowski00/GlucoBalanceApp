@@ -71,6 +71,10 @@ class UserSettings(Base):
     # IANA name such as "Europe/Warsaw". Times are stored in UTC; this is only for display,
     # for "today" and for guessing a reading's tag.
     timezone: Mapped[str] = mapped_column(String(64), default="UTC", server_default="UTC")
+    # Site rotation: days a site rests before it is suggested again, and (pump) days between
+    # infusion set changes.
+    site_rest_days: Mapped[int] = mapped_column(default=14, server_default="14")
+    set_change_days: Mapped[int] = mapped_column(default=3, server_default="3")
 
     user: Mapped[User] = relationship(back_populates="settings")
     time_blocks: Mapped[list[SettingsTimeBlock]] = relationship(

@@ -27,7 +27,7 @@ The owner wants to build the app in segments and fully understand every one. Fol
 |---|---|
 | `README.md` | Project description, planned features, roadmap, disclaimer. Describes the plan, not working features. |
 | `.gitignore` | Python, virtualenv, tool caches, secrets. |
-| `pyproject.toml` | Project metadata (`glucobalance`, Python >= 3.12, hatchling build) plus all tool config: ruff, mypy (strict), pytest. `httpx` is a runtime dependency (food search). Dev dependency group: ruff, mypy, pytest, pre-commit. |
+| `pyproject.toml` | Project metadata (`glucobalance`, Python >= 3.12, hatchling build) plus all tool config: ruff, mypy (strict), pytest. `httpx` is a runtime dependency (food search). Dev dependency group: ruff, mypy, pytest, hypothesis, pre-commit. |
 | `uv.lock` | Pinned dependency versions. Commit it. |
 | `src/glucobalance/__init__.py` | Re-exports `MGDL_PER_MMOLL` and `mgdl_to_mmoll()` from `units.py`. |
 | `src/glucobalance/units.py` | `DisplayUnit`, `mgdl_to_mmoll()`, `mmoll_to_mgdl()`, `format_glucose()`. |
@@ -64,6 +64,11 @@ The owner wants to build the app in segments and fully understand every one. Fol
 | `src/glucobalance/foods.py` | `FoodSource` Protocol, `OpenFoodFacts` client, `CachedFoodSource` and `carbs_for_portion()` (ADR 0008). |
 | `src/glucobalance/favourites.py`, `hypo_service.py` | Favourite meals (add, list, delete, log) and the hypo log (a treatment with carbs also creates a carb entry). |
 | `src/glucobalance/web/food.py`, `web/hypo.py` | The `/log/foods` search piece and the `/log/hypo` page. |
+| `src/glucobalance/sitemap.py` | The body map (`SITES`, 24 sub-zones, ADR 0009) and `seed_body_sites()`; a migration loads it into `body_sites`. |
+| `src/glucobalance/rotation.py` | `rank_sites()` and `suggest_site()`: the pure site ranking (written by the owner). |
+| `src/glucobalance/site_service.py`, `web/sites.py` | Pump and pen rotations, logging a use, blocked sites with an optional end date, preference weights, days until the next set change; the `/sites` page (ADR 0010). |
+| `src/glucobalance/bodymap.py` | Zone rectangles for the SVG body map, heat levels and 30-day use counts (ADR 0011). |
+| `tests/test_sitemap.py`, `test_rotation.py`, `test_site_service.py`, `test_web_sites.py`, `test_bodymap.py`, `test_web_bodymap.py`, `test_rotation_properties.py` | Stage 4 tests (the last one uses Hypothesis). |
 | `tests/test_foods.py`, `test_favourites.py`, `test_hypo_service.py`, `test_web_food_hypo.py` | Food search, favourites and hypo log tests. |
 | `.pre-commit-config.yaml` | Local hooks (ruff check --fix, ruff format, mypy) run through `uv run`, so they use `.venv` and the versions in `uv.lock`. |
 
@@ -73,7 +78,7 @@ The owner wants to build the app in segments and fully understand every one. Fol
 - README and `.gitignore`.
 - Python tooling: uv, ruff (lint + format), mypy strict and pytest are configured and all run clean; pre-commit runs ruff and mypy on every commit.
 
-**Not done yet** (still planned): the rest of Stage 3 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms, a Today timeline, daily and weekly charts (Plotly, ADR 0007) and a filterable logbook with CSV export followed, then food search, favourite meals and a hypo log (ADR 0008). There are no reminders or AI code yet.
+**Not done yet** (still planned): Stage 5 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms, a Today timeline, daily and weekly charts (Plotly, ADR 0007) and a filterable logbook with CSV export followed, then food search, favourite meals and a hypo log (ADR 0008). Stage 4 added the body map (ADR 0009), the site ranking written by the owner, pump and pen rotations with blocked sites and preferences (ADR 0010), a clickable SVG body map with a heatmap (ADR 0011) and Hypothesis property tests. There are no reminders or AI code yet.
 
 Python is pinned to 3.12 with `.python-version` (ADR 0003), matching CI and Docker; simglucose does not work on 3.14.
 
@@ -250,12 +255,12 @@ Done when manual readings are quick to enter and show on a daily chart.
 
 Done when the app suggests the next site for both pump and pen users and respects blocked sites.
 
-- [ ] Body map data: regions, sub-zones, front and back
-- [ ] Rotation algorithm as a pure function (written by the owner): rank sites by days since last use, rest period, blocked status and preference weights
-- [ ] Pump mode: one suggestion per set change, log the change, show days until next change
-- [ ] Pen mode: separate rotations for rapid-acting and long-acting, "site not available" with skip and end date
-- [ ] Clickable SVG body map with a usage heatmap
-- [ ] Property-based tests (hypothesis): no blocked site is ever suggested, usage stays even over time
+- [x] Body map data: regions, sub-zones, front and back
+- [x] Rotation algorithm as a pure function (written by the owner): rank sites by days since last use, rest period, blocked status and preference weights
+- [x] Pump mode: one suggestion per set change, log the change, show days until next change
+- [x] Pen mode: separate rotations for rapid-acting and long-acting, "site not available" with skip and end date
+- [x] Clickable SVG body map with a usage heatmap
+- [x] Property-based tests (hypothesis): no blocked site is ever suggested, usage stays even over time
 
 ### Stage 5: Reminders and notifications
 

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from datetime import datetime
+from decimal import Decimal
 from enum import StrEnum
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import CheckConstraint, ForeignKey, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from glucobalance.db import Base
@@ -47,6 +48,7 @@ class BodySite(Base):
     region: Mapped[SiteRegion] = mapped_column(str_enum(SiteRegion))
     side: Mapped[BodySide] = mapped_column(str_enum(BodySide))
     view: Mapped[BodyView] = mapped_column(str_enum(BodyView))
+    zone: Mapped[str] = mapped_column(String(30), default="", server_default="")
 
 
 class SiteUse(Base):
@@ -57,6 +59,44 @@ class SiteUse(Base):
     site_id: Mapped[int] = mapped_column(ForeignKey("body_sites.id"))
     used_at: Mapped[datetime] = mapped_column(UTCDateTime, index=True)
     purpose: Mapped[SitePurpose] = mapped_column(str_enum(SitePurpose))
+
+    user: Mapped[User] = relationship()
+    site: Mapped[BodySite] = relationship()
+
+
+class SiteBlock(Base):
+    """A site the user cannot use for now (bruise, sport) or ever (lump, scar, tattoo).
+
+    ``until`` is the moment the block ends; ``None`` means it lasts until the user removes it.
+    A block applies to every purpose: a bruised spot is bruised for any insulin.
+    """
+
+    __tablename__ = "site_blocks"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("body_sites.id"))
+    blocked_at: Mapped[datetime] = mapped_column(UTCDateTime)
+    until: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    reason: Mapped[str | None] = mapped_column(String(100))
+
+    user: Mapped[User] = relationship()
+    site: Mapped[BodySite] = relationship()
+
+
+class SitePreference(Base):
+    """How much the user likes a site: 0 avoids it, 1 is neutral, 2 is preferred."""
+
+    __tablename__ = "site_preferences"
+    __table_args__ = (
+        UniqueConstraint("user_id", "site_id"),
+        CheckConstraint("weight >= 0 AND weight <= 2", name="weight_range"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("body_sites.id"))
+    weight: Mapped[Decimal] = mapped_column(Numeric(2, 1))
 
     user: Mapped[User] = relationship()
     site: Mapped[BodySite] = relationship()
