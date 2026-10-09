@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "_macros.html" import button %}
+{% block title %}Log carbs · {{ app_name }}{% endblock %}
+{% block content %}
+{% set current = "/log/carbs" %}{% include "log/_tabs.html" %}
+<h1 class="mb-4 text-2xl font-semibold">Log carbs</h1>
+<section class="mb-4">
+  <form hx-get="/log/foods" hx-target="#food-results" hx-swap="innerHTML" hx-boost="false" class="flex gap-2">
+    <input class="block w-full rounded border border-slate-300 px-3 py-2" type="search" name="q" placeholder="Search a food, for example rolled oats" aria-label="Search a food" autocomplete="off">
+    <button class="rounded border border-teal-700 px-3 py-2 text-teal-800">Search</button>
+  </form>
+  <div id="food-results" aria-live="polite"></div>
+</section>
+<form method="post" action="/log/carbs" class="space-y-4 rounded border border-slate-200 bg-white p-4">
+  <label class="block">
+    <span class="text-sm font-medium">Carbohydrate (g)</span>
+    <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-3 text-2xl" type="text"
+           name="grams" value="{{ values.grams }}" inputmode="decimal" autocomplete="off" required autofocus>
+  </label>
+  <label class="block">
+    <span class="text-sm font-medium">What (optional)</span>
+    <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-2" type="text"
+           name="description" value="{{ values.description }}" maxlength="200">
+  </label>
+  <label class="block">
+    <span class="text-sm font-medium">Time</span>
+    <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-2" type="datetime-local"
+           name="eaten_at" value="{{ values.eaten_at }}" required>
+  </label>
+  <label class="block">
+    <span class="text-sm font-medium">Save as a favourite meal (optional)</span>
+    <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-2" type="text"
+           name="favourite_name" value="{{ values.favourite_name }}" maxlength="100" placeholder="Name, for example Porridge">
+  </label>
+  {% set confirm_text = "Yes, this is a second meal" %}{% include "log/_confirm.html" %}
+  {{ button("Save carbs") }}
+</form>
+
+{% if favourites %}
+<h2 class="mb-2 mt-6 font-medium">Favourite meals</h2>
+<ul class="divide-y divide-slate-200 rounded border border-slate-200 bg-white">
+  {% for meal in favourites %}
+  <li class="flex items-center gap-2 px-3 py-2 text-sm">
+    <span class="grow"><span class="font-medium">{{ meal.name }}</span> · {{ meal.grams }} g{% if meal.description %}<span class="block text-xs text-slate-500">{{ meal.description }}</span>{% endif %}</span>
+    <form method="post" action="/log/favourites/{{ meal.id }}/log" hx-boost="false"><button class="rounded bg-teal-700 px-3 py-1 text-white hover:bg-teal-800">Log now</button></form>
+    <form method="post" action="/log/favourites/{{ meal.id }}/delete" hx-boost="false"><button class="rounded border border-slate-300 px-2 py-1 text-slate-600" aria-label="Delete {{ meal.name }}">Delete</button></form>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

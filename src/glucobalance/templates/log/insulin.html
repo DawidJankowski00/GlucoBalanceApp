@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_macros.html" import button %}
+{% block title %}Log insulin · {{ app_name }}{% endblock %}
+{% block content %}
+{% set current = "/log/insulin" %}{% include "log/_tabs.html" %}
+<h1 class="mb-4 text-2xl font-semibold">Log insulin</h1>
+<form method="post" action="/log/insulin" class="space-y-4 rounded border border-slate-200 bg-white p-4">
+  <label class="block">
+    <span class="text-sm font-medium">Units</span>
+    <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-3 text-2xl" type="text"
+           name="units" value="{{ values.units }}" inputmode="decimal" autocomplete="off" required autofocus>
+    <span class="text-xs text-slate-500">In steps of {{ step }} units. Boluses up to {{ max_bolus }} units.</span>
+  </label>
+  <fieldset>
+    <legend class="text-sm font-medium">What for</legend>
+    <div class="mt-1 flex flex-wrap gap-2">
+      {% for kind, label in kinds.items() %}
+      <label class="cursor-pointer rounded-full border border-slate-300 bg-white px-3 py-2 text-sm has-[:checked]:border-teal-600 has-[:checked]:bg-teal-50">
+        <input type="radio" name="kind" value="{{ kind.value }}" class="sr-only" {% if values.kind == kind.value %}checked{% endif %}>{{ label }}
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  {% if insulins|length > 1 %}
+  <fieldset>
+    <legend class="text-sm font-medium">Insulin</legend>
+    <div class="mt-1 flex flex-wrap gap-2">
+      {% for insulin, label in insulins.items() %}
+      <label class="cursor-pointer rounded-full border border-slate-300 bg-white px-3 py-2 text-sm has-[:checked]:border-teal-600 has-[:checked]:bg-teal-50">
+        <input type="radio" name="insulin_type" value="{{ insulin.value }}" class="sr-only" {% if values.insulin_type == insulin.value %}checked{% endif %}>{{ label }}
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  {% else %}
+  <input type="hidden" name="insulin_type" value="rapid">
+  {% endif %}
+  <label class="block">
+    <span class="text-sm font-medium">Time</span>
+    <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-2" type="datetime-local"
+           name="taken_at" value="{{ values.taken_at }}" required>
+  </label>
+  {% set confirm_text = "Yes, I took this dose again" %}{% include "log/_confirm.html" %}
+  {{ button("Save dose") }}
+</form>
+<p class="mt-4 text-xs text-slate-500">This only records doses you have taken. The app does not suggest doses.</p>
+{% endblock %}

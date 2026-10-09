@@ -1,0 +1,6 @@
+{% set tabs = [("/log/glucose", "Glucose"), ("/log/insulin", "Insulin"), ("/log/carbs", "Carbs"), ("/log/hypo", "Hypo")] %}
+<nav class="mb-4 flex gap-2 text-sm" aria-label="What to log">
+  {% for href, label in tabs %}
+  <a href="{{ href }}" class="rounded-full border px-3 py-1 {% if href == current %}border-teal-700 bg-teal-700 text-white{% else %}border-slate-300 bg-white{% endif %}"{% if href == current %} aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>

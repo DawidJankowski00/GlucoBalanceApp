@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ "Today" if is_today else day.strftime("%d %b %Y") }} · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="mb-4 flex items-center justify-between">
+  <a href="/today?day={{ previous }}" class="text-sm text-teal-700 underline">&larr; Previous day</a>
+  <h1 class="text-2xl font-semibold">{{ "Today" if is_today else day.strftime("%a %d %b %Y") }}</h1>
+  {% if next %}<a href="/today?day={{ next }}" class="text-sm text-teal-700 underline">Next day &rarr;</a>{% else %}<span></span>{% endif %}
+</div>
+<div class="mb-4 flex gap-2 text-sm">
+  <a href="/log/glucose" class="rounded bg-teal-700 px-3 py-1 text-white">+ Glucose</a>
+  <a href="/log/insulin" class="rounded bg-teal-700 px-3 py-1 text-white">+ Insulin</a>
+  <a href="/log/carbs" class="rounded bg-teal-700 px-3 py-1 text-white">+ Carbs</a>
+</div>
+{% if rows %}
+<ol class="divide-y divide-slate-200 rounded border border-slate-200 bg-white">
+  {% for row in rows %}
+  <li class="flex items-baseline gap-3 px-3 py-2">
+    <span class="w-12 shrink-0 text-sm tabular-nums text-slate-500">{{ row.time }}</span>
+    <span class="w-16 shrink-0 text-xs uppercase tracking-wide text-slate-500">{{ row.kind }}</span>
+    <span>
+      <span class="font-semibold {% if row.low %}text-red-700{% elif row.high %}text-amber-700{% endif %}">{{ row.headline }}</span>
+      {% if row.detail %}<span class="block text-sm text-slate-600">{{ row.detail }}</span>{% endif %}
+    </span>
+  </li>
+  {% endfor %}
+</ol>
+{% else %}
+<p class="text-sm text-slate-500">Nothing logged on this day.</p>
+{% endif %}
+{% endblock %}

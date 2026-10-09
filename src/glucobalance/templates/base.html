@@ -10,6 +10,8 @@
   <link rel="apple-touch-icon" href="/static/icon-192.png">
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  {# Swap 422 responses too, so a boosted form shows its validation errors. #}
+  <meta name="htmx-config" content='{"responseHandling":[{"code":"204","swap":false},{"code":"[23]..","swap":true},{"code":"422","swap":true},{"code":"[45]..","swap":false,"error":true}]}'>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900" hx-boost="true">
   <header class="bg-teal-700 text-white">
@@ -18,6 +20,10 @@
       {% if user and user.settings %}
       <div class="flex items-center gap-4 text-sm">
         <a href="/" class="hover:underline">Home</a>
+        <a href="/today" class="hover:underline">Today</a>
+        <a href="/log/glucose" class="hover:underline">Log</a>
+        <a href="/chart" class="hover:underline">Chart</a>
+        <a href="/logbook" class="hover:underline">Logbook</a>
         <a href="/settings" class="hover:underline">Settings</a>
         <a href="/settings/history" class="hover:underline">History</a>
         <form method="post" action="/logout" hx-boost="false">
@@ -39,5 +45,16 @@
   <footer class="mx-auto max-w-3xl px-4 pb-8 text-xs text-slate-500">
     Not a medical device and not medical advice. Agree your settings with your diabetes team.
   </footer>
+  <script>
+    // Fill fields marked data-browser-timezone with this device's IANA time zone.
+    function gbaFillTimezone() {
+      const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      document.querySelectorAll("[data-browser-timezone]").forEach((el) => {
+        if (!el.value) el.value = zone;
+      });
+    }
+    gbaFillTimezone();
+    document.addEventListener("htmx:afterSettle", gbaFillTimezone);
+  </script>
 </body>
 </html>

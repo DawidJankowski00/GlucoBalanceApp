@@ -10,7 +10,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from glucobalance.models import ChangeSource, DisplayUnit
-from glucobalance.settings_service import SettingsError, apply_settings
+from glucobalance.settings_service import SettingsError, apply_settings, is_valid_timezone
 from glucobalance.web.deps import CurrentUser, DbSession, Templates
 from glucobalance.web.forms import BLOCK_ROWS, parse_choices, parse_settings
 from glucobalance.web.rendering import render
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/onboarding")
 DRAFT_KEY = "onboarding_draft"
 LAST_STEP = 3
 STEP_FIELDS: dict[int, tuple[str, ...]] = {
-    1: ("delivery_mode", "monitoring_mode", "display_unit"),
+    1: ("delivery_mode", "monitoring_mode", "display_unit", "timezone"),
     2: (
         "target_low",
         "target_high",
@@ -96,6 +96,9 @@ async def submit_step(
         # Values typed in another unit would be misread, so later steps start fresh.
         draft = {}
     draft = {**draft, **posted}
+    if step == 1 and not is_valid_timezone(draft.get("timezone", "")):
+        # The browser fills this in; without a usable answer start from UTC, editable later.
+        draft["timezone"] = "UTC"
 
     try:
         if step == 1:

@@ -92,6 +92,7 @@ def parse_settings(form: Mapping[str, str], *, require_blocks: bool = True) -> S
         dose_step_units=_decimal(form.get("dose_step_units", ""), "the dose step"),
         clinician_contact=form.get("clinician_contact", "").strip() or None,
         time_blocks=blocks,
+        timezone=form.get("timezone", "").strip() or "UTC",
     )
     validate(data)
     return data
@@ -115,6 +116,7 @@ def settings_to_form(data: SettingsInput) -> dict[str, str]:
         "max_bolus_units": format(data.max_bolus_units.normalize(), "f"),
         "dose_step_units": format(data.dose_step_units.normalize(), "f"),
         "clinician_contact": data.clinician_contact or "",
+        "timezone": data.timezone,
     }
     for row, block in enumerate(data.time_blocks[:BLOCK_ROWS]):
         form[f"block_start_{row}"] = f"{block.start_time:%H:%M}"

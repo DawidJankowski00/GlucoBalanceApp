@@ -7,15 +7,30 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from glucobalance.config import Settings, get_settings
 from glucobalance.db import make_engine, make_session_factory
-from glucobalance.web import auth, onboarding, pages
+from glucobalance.foods import CachedFoodSource, FoodSource, OpenFoodFacts
+from glucobalance.web import (
+    auth,
+    chart_page,
+    food,
+    hypo,
+    log,
+    logbook_pages,
+    onboarding,
+    pages,
+    today,
+)
 from glucobalance.web.deps import LoginRequired, login_required_handler
 from glucobalance.web.rendering import STATIC_DIR, make_templates
 
 SESSION_MAX_AGE_SECONDS = 14 * 24 * 3600
 
 
-def create_app(settings: Settings | None = None, engine: Engine | None = None) -> FastAPI:
-    """Build the app. Tests can pass their own settings and database engine."""
+def create_app(
+    settings: Settings | None = None,
+    engine: Engine | None = None,
+    food_source: FoodSource | None = None,
+) -> FastAPI:
+    """Build the app. Tests can pass their own settings, database engine and food source."""
     settings = settings or get_settings()
     app = FastAPI(title=settings.app_name, debug=settings.debug)
 
@@ -30,11 +45,18 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
     )
     app.state.session_factory = make_session_factory(engine or make_engine(settings.database_url))
     app.state.templates = make_templates(settings.app_name)
+    app.state.food_source = food_source or CachedFoodSource(OpenFoodFacts())
     app.add_exception_handler(LoginRequired, login_required_handler)
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     app.include_router(auth.router)
     app.include_router(onboarding.router)
     app.include_router(pages.router)
+    app.include_router(log.router)
+    app.include_router(food.router)
+    app.include_router(hypo.router)
+    app.include_router(today.router)
+    app.include_router(chart_page.router)
+    app.include_router(logbook_pages.router)
 
     @app.get("/health")
     def health() -> dict[str, str]:

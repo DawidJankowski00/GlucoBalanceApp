@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "_macros.html" import button %}
+{% block title %}Log a hypo treatment · {{ app_name }}{% endblock %}
+{% block content %}
+{% set current = "/log/hypo" %}{% include "log/_tabs.html" %}
+<h1 class="mb-1 text-2xl font-semibold">Hypo treatment</h1>
+<p class="mb-4 text-sm text-slate-600">Record what you took for a low. Follow the hypo plan agreed with your diabetes team{% if clinician %} ({{ clinician }}){% endif %}. This page only keeps a record.</p>
+<form method="post" action="/log/hypo" class="space-y-4 rounded border border-slate-200 bg-white p-4">
+  <fieldset>
+    <legend class="text-sm font-medium">What did you take?</legend>
+    <div class="mt-1 flex flex-wrap gap-2">
+      {% for kind, label in treatments.items() %}
+      <label class="cursor-pointer rounded-full border border-slate-300 bg-white px-3 py-2 text-sm has-[:checked]:border-teal-600 has-[:checked]:bg-teal-50">
+        <input type="radio" name="treatment" value="{{ kind.value }}" class="sr-only" {% if values.treatment == kind.value %}checked{% endif %} required>{{ label }}
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  <label class="block">
+    <span class="text-sm font-medium">Carbohydrate (g), if you know it</span>
+    <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-2" type="text" name="carbs_grams"
+           value="{{ values.carbs_grams }}" inputmode="decimal" autocomplete="off">
+    <span class="text-xs text-slate-500">Leave empty for glucagon.</span>
+  </label>
+  <label class="block">
+    <span class="text-sm font-medium">Time</span>
+    <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-2" type="datetime-local"
+           name="treated_at" value="{{ values.treated_at }}" required>
+  </label>
+  <label class="block">
+    <span class="text-sm font-medium">Note (optional)</span>
+    <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-2" type="text" name="note" maxlength="500" value="{{ values.note }}">
+  </label>
+  {% set confirm_text = "Yes, I took this again" %}{% include "log/_confirm.html" %}
+  {{ button("Save treatment") }}
+</form>
+
+<h2 class="mb-2 mt-6 font-medium">Recent treatments</h2>
+{% if recent %}
+<ul class="divide-y divide-slate-200 rounded border border-slate-200 bg-white">
+  {% for t in recent %}
+  <li class="px-3 py-2 text-sm">
+    <span class="text-slate-600">{{ t.when.strftime("%d %b %H:%M") }}</span>
+    <span class="font-semibold">{{ t.treatment }}</span>{% if t.carbs %} · {{ t.carbs }} g{% endif %}
+    {% if t.reading %}<span class="text-slate-500"> · low was {{ t.reading }}</span>{% endif %}
+    {% if t.note %}<span class="block text-xs text-slate-500">{{ t.note }}</span>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="text-sm text-slate-500">Nothing logged yet.</p>
+{% endif %}
+{% endblock %}

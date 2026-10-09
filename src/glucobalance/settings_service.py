@@ -11,6 +11,7 @@ from datetime import time
 from decimal import Decimal
 from enum import StrEnum
 from typing import Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -54,6 +55,16 @@ class SettingsInput:
     dose_step_units: Decimal
     clinician_contact: str | None
     time_blocks: tuple[TimeBlockInput, ...]
+    timezone: str = "UTC"
+
+
+def is_valid_timezone(name: str) -> bool:
+    """True for an IANA time zone name the app can use, such as ``Europe/Warsaw``."""
+    try:
+        ZoneInfo(name)
+    except (ZoneInfoNotFoundError, ValueError):
+        return False
+    return True
 
 
 def validate(data: SettingsInput) -> None:
@@ -70,6 +81,8 @@ def validate(data: SettingsInput) -> None:
         raise SettingsError("The maximum bolus must be above 0 and at most 50 units.")
     if data.dose_step_units not in ALLOWED_DOSE_STEPS:
         raise SettingsError("The dose step must be 0.05, 0.1, 0.5 or 1 unit.")
+    if not is_valid_timezone(data.timezone):
+        raise SettingsError("Choose a time zone such as Europe/Warsaw.")
     _validate_blocks(data.time_blocks)
 
 
@@ -115,6 +128,7 @@ _FIELDS: tuple[str, ...] = (
     "max_bolus_units",
     "dose_step_units",
     "clinician_contact",
+    "timezone",
 )
 
 
@@ -195,6 +209,7 @@ def to_input(settings: UserSettings) -> SettingsInput:
         max_bolus_units=settings.max_bolus_units,
         dose_step_units=settings.dose_step_units,
         clinician_contact=settings.clinician_contact,
+        timezone=settings.timezone,
         time_blocks=tuple(
             TimeBlockInput(b.start_time, b.icr_grams_per_unit, b.isf_mgdl)
             for b in settings.time_blocks

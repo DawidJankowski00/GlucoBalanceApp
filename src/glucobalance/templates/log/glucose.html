@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% from "_macros.html" import button %}
+{% block title %}Log glucose · {{ app_name }}{% endblock %}
+{% block content %}
+{% set current = "/log/glucose" %}{% include "log/_tabs.html" %}
+<h1 class="mb-1 text-2xl font-semibold">Log glucose</h1>
+{% if flags and not flags.manual_glucose_entry %}
+<p class="mb-4 text-sm text-slate-600">Your CGM readings arrive automatically. Use this form to add a fingerstick check, for example to confirm a reading that looks wrong.</p>
+{% endif %}
+
+{% if show_hypo %}
+<section class="mb-4 rounded border border-red-300 bg-red-50 p-4 text-red-900" role="alert">
+  <h2 class="font-semibold">Low glucose</h2>
+  <p class="mt-1">Take 15 g of fast-acting carbohydrate (glucose tablets or juice), wait 15 minutes and check again. Repeat if you are still below 70 mg/dL (3.9 mmol/L).</p>
+  <p class="mt-1 text-sm"><a class="font-medium underline" href="/log/hypo">Log what you took</a></p>
+  <p class="mt-1 text-sm">Follow the hypo plan agreed with your diabetes team.{% if clinician %} Contact: {{ clinician }}.{% endif %}</p>
+</section>
+{% endif %}
+
+<form method="post" action="/log/glucose" class="space-y-4 rounded border border-slate-200 bg-white p-4">
+  <label class="block">
+    <span class="text-sm font-medium">Glucose ({{ unit }})</span>
+    <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-3 text-2xl" type="text"
+           name="value" value="{{ values.value }}" inputmode="decimal" autocomplete="off" required autofocus>
+  </label>
+  <fieldset>
+    <legend class="text-sm font-medium">Tag</legend>
+    <div class="mt-1 flex flex-wrap gap-2">
+      {% for tag, label in tags.items() %}
+      <label class="cursor-pointer rounded-full border border-slate-300 bg-white px-3 py-2 text-sm has-[:checked]:border-teal-600 has-[:checked]:bg-teal-50">
+        <input type="radio" name="tag" value="{{ tag.value }}" class="sr-only" {% if values.tag == tag.value %}checked{% endif %}>{{ label }}
+      </label>
+      {% endfor %}
+      <label class="cursor-pointer rounded-full border border-slate-300 bg-white px-3 py-2 text-sm has-[:checked]:border-teal-600 has-[:checked]:bg-teal-50">
+        <input type="radio" name="tag" value="" class="sr-only" {% if not values.tag %}checked{% endif %}>No tag
+      </label>
+    </div>
+  </fieldset>
+  <label class="block">
+    <span class="text-sm font-medium">Time</span>
+    <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-2" type="datetime-local"
+           name="measured_at" value="{{ values.measured_at }}" required>
+  </label>
+  <details {% if values.note %}open{% endif %}>
+    <summary class="cursor-pointer text-sm text-teal-700">Add a note</summary>
+    <textarea class="mt-2 block w-full rounded border border-slate-300 px-3 py-2" name="note" maxlength="500" rows="2">{{ values.note }}</textarea>
+  </details>
+  {{ button("Save reading") }}
+</form>
+
+<h2 class="mb-2 mt-6 font-medium">Recent readings</h2>
+{% if recent %}
+<ul class="divide-y divide-slate-200 rounded border border-slate-200 bg-white">
+  {% for r in recent %}
+  <li class="flex items-baseline justify-between gap-4 px-3 py-2">
+    <span class="text-sm text-slate-600">{{ r.when.strftime("%d %b %H:%M") }}{% if r.tag %} · {{ r.tag }}{% endif %}{% if r.note %}<span class="block text-xs text-slate-500">{{ r.note }}</span>{% endif %}</span>
+    <span class="font-semibold {% if r.low %}text-red-700{% elif r.high %}text-amber-700{% endif %}">{{ r.value }}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="text-sm text-slate-500">No readings yet.</p>
+{% endif %}
+{% endblock %}

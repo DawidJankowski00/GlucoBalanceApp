@@ -68,6 +68,9 @@ class UserSettings(Base):
     max_bolus_units: Mapped[Decimal] = mapped_column(Numeric(5, 2))
     dose_step_units: Mapped[Decimal] = mapped_column(Numeric(4, 2), default=Decimal("0.5"))
     clinician_contact: Mapped[str | None] = mapped_column(Text)
+    # IANA name such as "Europe/Warsaw". Times are stored in UTC; this is only for display,
+    # for "today" and for guessing a reading's tag.
+    timezone: Mapped[str] = mapped_column(String(64), default="UTC", server_default="UTC")
 
     user: Mapped[User] = relationship(back_populates="settings")
     time_blocks: Mapped[list[SettingsTimeBlock]] = relationship(

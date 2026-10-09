@@ -6,11 +6,19 @@
   {{ "CGM" if user.settings.monitoring_mode.value == "cgm" else "Glucometer" }} ·
   target {{ user.settings.target_low_mgdl }}–{{ user.settings.target_high_mgdl }} mg/dL
 </p>
+<div class="mb-6 flex flex-wrap gap-2">
+  <a href="/log/glucose" class="rounded bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800">Log glucose</a>
+  <a href="/log/insulin" class="rounded bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800">Log insulin</a>
+  <a href="/log/carbs" class="rounded bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800">Log carbs</a>
+  <a href="/today" class="rounded border border-teal-700 px-4 py-2 font-medium text-teal-800">Today</a>
+  <a href="/chart" class="rounded border border-teal-700 px-4 py-2 font-medium text-teal-800">Chart</a>
+  <a href="/logbook" class="rounded border border-teal-700 px-4 py-2 font-medium text-teal-800">Logbook</a>
+</div>
 <h2 class="mb-2 font-medium">What the app will do for you</h2>
 <ul class="space-y-2">
   {% for title, text in features %}
   <li class="rounded border border-slate-200 bg-white p-3"><span class="font-medium">{{ title }}.</span> {{ text }}</li>
   {% endfor %}
 </ul>
-<p class="mt-4 text-sm text-slate-500">Logging, charts and reminders arrive in the next stages.</p>
+<p class="mt-4 text-sm text-slate-500">Charts and reminders arrive in the next stages.</p>
 {% endblock %}
