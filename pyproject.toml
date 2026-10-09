@@ -53,3 +53,12 @@ dev = [
     "pytest>=9.1.1",
     "ruff>=0.16.10",
 ]
+sim = [
+    "setuptools<70",
+    "simglucose>=0.2.11",
+]
+
+# simglucose and pandas (optional "sim" group) ship no type information
+[[tool.mypy.overrides]]
+module = ["simglucose.*", "pandas.*"]
+ignore_missing_imports = true

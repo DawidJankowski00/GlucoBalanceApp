@@ -25,6 +25,7 @@ uv run pytest            # tests
 uv run uvicorn glucobalance.main:app --reload   # run the app
 uv run alembic upgrade head                     # apply database migrations
 uv run alembic revision --autogenerate -m "..." # draft a migration from model changes
+uv run --group sim python -m glucobalance.seed --days 30  # simulated demo user (slow)
 docker compose up --build                       # app + PostgreSQL
 ```
 
