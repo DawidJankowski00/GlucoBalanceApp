@@ -7,3 +7,5 @@ Use [0000-template.md](0000-template.md) as a starting point.
 | ADR | Decision |
 |---|---|
 | [0001](0001-fastapi-htmx.md) | FastAPI + HTMX instead of a React front end |
+| [0002](0002-sqlalchemy-alembic-repositories.md) | SQLAlchemy 2, Alembic and a repository layer for persistence |
+| [0003](0003-simglucose-optional-and-python-312.md) | simglucose as an optional dependency group, Python pinned to 3.12 |
