@@ -91,7 +91,24 @@ Each stage ends with something that can be demonstrated.
 
 ## Getting started
 
-There is nothing to install or run yet. Setup instructions will be added here in Stage 0.
+Requires [uv](https://docs.astral.sh/uv/) (and Docker for the container setup).
+
+**Locally**
+
+```bash
+uv sync
+cp .env.example .env
+uv run uvicorn glucobalance.main:app --reload
+```
+
+**With Docker Compose** (app + PostgreSQL)
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Either way, open <http://localhost:8000/health> to check the app is running.
 
 ## Data and privacy
 
