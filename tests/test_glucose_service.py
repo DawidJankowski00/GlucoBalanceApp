@@ -6,9 +6,9 @@ import pytest
 from sqlalchemy.orm import Session
 
 from glucobalance.accounts import register
+from glucobalance.entries import EntryError
 from glucobalance.glucose_service import (
     GlucoseEntry,
-    GlucoseEntryError,
     is_low,
     log_reading,
     recent_readings,
@@ -54,7 +54,7 @@ def test_blank_note_is_stored_as_none(session: Session, user: User) -> None:
 
 def test_note_is_trimmed_and_limited(session: Session, user: User) -> None:
     assert log_reading(session, user, entry(note="  ok  "), now=NOW).note == "ok"
-    with pytest.raises(GlucoseEntryError, match="500 characters"):
+    with pytest.raises(EntryError, match="500 characters"):
         log_reading(session, user, entry(minutes_ago=30, note="x" * 501), now=NOW)
 
 
@@ -68,7 +68,7 @@ def test_values_a_meter_can_show_are_accepted(session: Session, user: User, valu
 
 @pytest.mark.parametrize("value", [0, 19, 601, 1000])
 def test_implausible_values_are_rejected(session: Session, user: User, value: int) -> None:
-    with pytest.raises(GlucoseEntryError, match="between 20 and 600 mg/dL"):
+    with pytest.raises(EntryError, match="between 20 and 600 mg/dL"):
         log_reading(session, user, entry(value), now=NOW)
 
 
@@ -82,7 +82,7 @@ def test_a_few_minutes_in_the_future_is_allowed_for_clock_drift(
 
 
 def test_further_in_the_future_is_rejected(session: Session, user: User) -> None:
-    with pytest.raises(GlucoseEntryError, match="future"):
+    with pytest.raises(EntryError, match="future"):
         log_reading(session, user, entry(minutes_ago=-6), now=NOW)
 
 
@@ -91,7 +91,7 @@ def test_up_to_30_days_back_is_allowed(session: Session, user: User) -> None:
 
 
 def test_older_than_30_days_is_rejected(session: Session, user: User) -> None:
-    with pytest.raises(GlucoseEntryError, match="30 days"):
+    with pytest.raises(EntryError, match="30 days"):
         log_reading(session, user, entry(minutes_ago=30 * 24 * 60 + 1), now=NOW)
 
 
@@ -107,13 +107,13 @@ def test_naive_time_is_rejected(session: Session, user: User) -> None:
 def test_second_reading_in_the_same_minute_is_rejected(session: Session, user: User) -> None:
     log_reading(session, user, entry(110), now=NOW)
     later_same_minute = GlucoseEntry(value_mgdl=150, measured_at=NOW + timedelta(seconds=40))
-    with pytest.raises(GlucoseEntryError, match="already logged a reading at"):
+    with pytest.raises(EntryError, match="already logged a reading at"):
         log_reading(session, user, later_same_minute, now=NOW)
 
 
 def test_same_value_within_five_minutes_is_a_double_tap(session: Session, user: User) -> None:
     log_reading(session, user, entry(110, minutes_ago=4), now=NOW)
-    with pytest.raises(GlucoseEntryError, match="same value"):
+    with pytest.raises(EntryError, match="same value"):
         log_reading(session, user, entry(110), now=NOW)
 
 
@@ -144,7 +144,7 @@ def test_other_users_readings_do_not_count(session: Session, user: User) -> None
 
 
 def test_a_rejected_reading_is_not_saved(session: Session, user: User) -> None:
-    with pytest.raises(GlucoseEntryError):
+    with pytest.raises(EntryError):
         log_reading(session, user, entry(5), now=NOW)
     assert session.query(GlucoseReading).count() == 0
 

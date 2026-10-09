@@ -1,7 +1,7 @@
 """Logging glucose readings by hand: the checks a reading must pass before it is saved.
 
 ``log_reading`` validates first and then saves through the repository, like
-``settings_service.apply_settings``. Every problem is raised as ``GlucoseEntryError`` with a
+``settings_service.apply_settings``. Every problem is raised as ``entries.EntryError`` with a
 message that can be shown on the page. Values are in mg/dL; the form converts mmol/L first.
 """
 
@@ -11,6 +11,7 @@ from datetime import datetime, time, timedelta
 
 from sqlalchemy.orm import Session
 
+from glucobalance.entries import EntryError, check_entry_time
 from glucobalance.models import GlucoseReading, GlucoseTag, ReadingSource, User
 from glucobalance.repositories import GlucoseRepository
 
@@ -18,16 +19,9 @@ from glucobalance.repositories import GlucoseRepository
 MIN_MGDL = 20
 MAX_MGDL = 600
 LOW_MGDL = 70
-# Allowance for a phone clock that runs a little ahead of the server.
-FUTURE_ALLOWANCE = timedelta(minutes=5)
-MAX_AGE = timedelta(days=30)
 # The same value again this soon is almost always the same reading saved twice.
 DOUBLE_TAP_WINDOW = timedelta(minutes=5)
 NOTE_MAX_LENGTH = 500
-
-
-class GlucoseEntryError(ValueError):
-    """The reading is not acceptable. The message is safe to show to the user."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,24 +56,15 @@ def _clean_note(note: str | None) -> str | None:
         return None
     note = note.strip()
     if len(note) > NOTE_MAX_LENGTH:
-        raise GlucoseEntryError(f"Keep the note under {NOTE_MAX_LENGTH} characters.")
+        raise EntryError(f"Keep the note under {NOTE_MAX_LENGTH} characters.")
     return note
 
 
 def _check_value(value_mgdl: int) -> None:
     if not MIN_MGDL <= value_mgdl <= MAX_MGDL:
-        raise GlucoseEntryError(
+        raise EntryError(
             f"Enter a glucose value between {MIN_MGDL} and {MAX_MGDL} mg/dL (1.1 to 33.3 mmol/L)."
         )
-
-
-def _check_time(measured_at: datetime, now: datetime) -> None:
-    if measured_at.tzinfo is None:
-        raise ValueError("naive datetime: attach the user's timezone before checking a reading")
-    if measured_at > now + FUTURE_ALLOWANCE:
-        raise GlucoseEntryError("The time is in the future. Check the date and time.")
-    if measured_at < now - MAX_AGE:
-        raise GlucoseEntryError("Readings older than 30 days cannot be added.")
 
 
 def _check_duplicates(entry: GlucoseEntry, nearby: Sequence[GlucoseReading]) -> None:
@@ -87,9 +72,9 @@ def _check_duplicates(entry: GlucoseEntry, nearby: Sequence[GlucoseReading]) -> 
     minute = entry.measured_at.replace(second=0, microsecond=0)
     for reading in nearby:
         if reading.measured_at.replace(second=0, microsecond=0) == minute:
-            raise GlucoseEntryError("You already logged a reading at that time.")
+            raise EntryError("You already logged a reading at that time.")
         if reading.value_mgdl == entry.value_mgdl:
-            raise GlucoseEntryError(
+            raise EntryError(
                 "The same value was logged less than 5 minutes ago. It is probably saved already."
             )
 
@@ -109,7 +94,7 @@ def log_reading(
 ) -> GlucoseReading:
     """Check ``entry`` and save it as a manual reading. Never commits."""
     _check_value(entry.value_mgdl)
-    _check_time(entry.measured_at, now)
+    check_entry_time(entry.measured_at, now)
     note = _clean_note(entry.note)
     _check_duplicates(entry, _nearby_manual(session, user, entry.measured_at))
     return GlucoseRepository(session).add(
