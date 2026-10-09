@@ -96,3 +96,7 @@ There is nothing to install or run yet. Setup instructions will be added here in
 ## Data and privacy
 
 Real health data is meant to stay on the user's own machine. The public demo will only ever hold simulated patients.
+
+## Licence
+
+GlucoBalanceApp is released under the [MIT Licence](LICENSE).
