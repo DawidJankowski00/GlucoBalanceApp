@@ -10,8 +10,10 @@ from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from zoneinfo import ZoneInfo
 
-from glucobalance.glucose_service import GlucoseEntry, GlucoseEntryError
-from glucobalance.models import DisplayUnit, GlucoseTag
+from glucobalance.entries import EntryError
+from glucobalance.glucose_service import GlucoseEntry
+from glucobalance.models import DisplayUnit, DoseKind, GlucoseTag, InsulinType
+from glucobalance.treatment_service import CarbInput, DoseInput
 from glucobalance.units import mmoll_to_mgdl
 
 
@@ -20,7 +22,7 @@ def parse_local_datetime(raw: str, zone: ZoneInfo) -> datetime:
     try:
         local = datetime.strptime(raw.strip(), "%Y-%m-%dT%H:%M")
     except ValueError:
-        raise GlucoseEntryError("Enter the time as a date and time.") from None
+        raise EntryError("Enter the time as a date and time.") from None
     return local.replace(tzinfo=zone).astimezone(UTC)
 
 
@@ -29,13 +31,19 @@ def local_input_value(moment: datetime, zone: ZoneInfo) -> str:
     return f"{moment.astimezone(zone):%Y-%m-%dT%H:%M}"
 
 
-def _glucose_mgdl(raw: str, unit: DisplayUnit) -> int:
+def _number(raw: str, message: str) -> Decimal:
+    """A decimal typed with a dot or a comma."""
     try:
         value = Decimal(raw.strip().replace(",", "."))
     except InvalidOperation:
-        raise GlucoseEntryError("Enter your glucose value as a number.") from None
+        raise EntryError(message) from None
     if not value.is_finite():
-        raise GlucoseEntryError("Enter your glucose value as a number.")
+        raise EntryError(message)
+    return value
+
+
+def _glucose_mgdl(raw: str, unit: DisplayUnit) -> int:
+    value = _number(raw, "Enter your glucose value as a number.")
     return round(value) if unit is DisplayUnit.MGDL else mmoll_to_mgdl(float(value))
 
 
@@ -45,7 +53,7 @@ def _tag(raw: str) -> GlucoseTag | None:
     try:
         return GlucoseTag(raw)
     except ValueError:
-        raise GlucoseEntryError("Choose a tag from the list.") from None
+        raise EntryError("Choose a tag from the list.") from None
 
 
 def parse_glucose_form(form: Mapping[str, str], unit: DisplayUnit, zone: ZoneInfo) -> GlucoseEntry:
@@ -54,4 +62,35 @@ def parse_glucose_form(form: Mapping[str, str], unit: DisplayUnit, zone: ZoneInf
         measured_at=parse_local_datetime(form.get("measured_at", ""), zone),
         tag=_tag(form.get("tag", "").strip()),
         note=form.get("note", "").strip() or None,
+    )
+
+
+def _confirmed(form: Mapping[str, str]) -> bool:
+    return bool(form.get("confirmed"))
+
+
+def parse_dose_form(form: Mapping[str, str], zone: ZoneInfo) -> DoseInput:
+    try:
+        insulin_type = InsulinType(form.get("insulin_type", ""))
+    except ValueError:
+        raise EntryError("Choose the insulin: rapid-acting or long-acting.") from None
+    try:
+        kind = DoseKind(form.get("kind", ""))
+    except ValueError:
+        raise EntryError("Choose what the dose was for.") from None
+    return DoseInput(
+        units=_number(form.get("units", ""), "Enter the dose in units."),
+        insulin_type=insulin_type,
+        kind=kind,
+        taken_at=parse_local_datetime(form.get("taken_at", ""), zone),
+        confirmed=_confirmed(form),
+    )
+
+
+def parse_carb_form(form: Mapping[str, str], zone: ZoneInfo) -> CarbInput:
+    return CarbInput(
+        grams=_number(form.get("grams", ""), "Enter the carbs in grams."),
+        eaten_at=parse_local_datetime(form.get("eaten_at", ""), zone),
+        description=form.get("description", "").strip() or None,
+        confirmed=_confirmed(form),
     )

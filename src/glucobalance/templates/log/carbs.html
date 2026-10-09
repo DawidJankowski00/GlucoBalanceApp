@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_macros.html" import button %}
+{% block title %}Log carbs · {{ app_name }}{% endblock %}
+{% block content %}
+{% set current = "/log/carbs" %}{% include "log/_tabs.html" %}
+<h1 class="mb-4 text-2xl font-semibold">Log carbs</h1>
+<form method="post" action="/log/carbs" class="space-y-4 rounded border border-slate-200 bg-white p-4">
+  <label class="block">
+    <span class="text-sm font-medium">Carbohydrate (g)</span>
+    <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-3 text-2xl" type="text"
+           name="grams" value="{{ values.grams }}" inputmode="decimal" autocomplete="off" required autofocus>
+  </label>
+  <label class="block">
+    <span class="text-sm font-medium">What (optional)</span>
+    <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-2" type="text"
+           name="description" value="{{ values.description }}" maxlength="200">
+  </label>
+  <label class="block">
+    <span class="text-sm font-medium">Time</span>
+    <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-2" type="datetime-local"
+           name="eaten_at" value="{{ values.eaten_at }}" required>
+  </label>
+  {% set confirm_text = "Yes, this is a second meal" %}{% include "log/_confirm.html" %}
+  {{ button("Save carbs") }}
+</form>
+{% endblock %}

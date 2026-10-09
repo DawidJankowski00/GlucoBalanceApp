@@ -2,6 +2,7 @@
 {% from "_macros.html" import button %}
 {% block title %}Log glucose · {{ app_name }}{% endblock %}
 {% block content %}
+{% set current = "/log/glucose" %}{% include "log/_tabs.html" %}
 <h1 class="mb-1 text-2xl font-semibold">Log glucose</h1>
 {% if flags and not flags.manual_glucose_entry %}
 <p class="mb-4 text-sm text-slate-600">Your CGM readings arrive automatically. Use this form to add a fingerstick check, for example to confirm a reading that looks wrong.</p>

@@ -7,7 +7,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from glucobalance.config import Settings, get_settings
 from glucobalance.db import make_engine, make_session_factory
-from glucobalance.web import auth, log, onboarding, pages
+from glucobalance.web import auth, log, onboarding, pages, today
 from glucobalance.web.deps import LoginRequired, login_required_handler
 from glucobalance.web.rendering import STATIC_DIR, make_templates
 
@@ -36,6 +36,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
     app.include_router(onboarding.router)
     app.include_router(pages.router)
     app.include_router(log.router)
+    app.include_router(today.router)
 
     @app.get("/health")
     def health() -> dict[str, str]:

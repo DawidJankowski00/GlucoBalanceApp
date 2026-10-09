@@ -6,7 +6,12 @@
   {{ "CGM" if user.settings.monitoring_mode.value == "cgm" else "Glucometer" }} ·
   target {{ user.settings.target_low_mgdl }}–{{ user.settings.target_high_mgdl }} mg/dL
 </p>
-<a href="/log/glucose" class="mb-6 inline-block rounded bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800">Log glucose</a>
+<div class="mb-6 flex flex-wrap gap-2">
+  <a href="/log/glucose" class="rounded bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800">Log glucose</a>
+  <a href="/log/insulin" class="rounded bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800">Log insulin</a>
+  <a href="/log/carbs" class="rounded bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800">Log carbs</a>
+  <a href="/today" class="rounded border border-teal-700 px-4 py-2 font-medium text-teal-800">Today</a>
+</div>
 <h2 class="mb-2 font-medium">What the app will do for you</h2>
 <ul class="space-y-2">
   {% for title, text in features %}
