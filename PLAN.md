@@ -45,6 +45,12 @@ The owner wants to build the app in segments and fully understand every one. Fol
 | `src/glucobalance/main.py` | `create_app()` factory, `app`, and `GET /health`. Run with `uv run uvicorn glucobalance.main:app --reload`. |
 | `.env.example` | Documented variables with placeholder values; copy to `.env`. |
 | `tests/test_config.py`, `tests/test_health.py` | Tests for settings loading and the health endpoint. |
+| `src/glucobalance/features.py` | `feature_flags()`: the one function that turns pump/pens and glucometer/CGM into `FeatureFlags`. |
+| `src/glucobalance/accounts.py` | Sign-up, Argon2 password hashing and `authenticate()`. |
+| `src/glucobalance/settings_service.py` | Settings validation, `apply_settings()` and the change log (`SettingsChange`). |
+| `src/glucobalance/web/` | Routes and helpers: login, onboarding wizard, home, settings page and history, form parsing. |
+| `src/glucobalance/templates/`, `static/` | Jinja2 templates (Tailwind via CDN, HTMX) and the PWA manifest and icons. |
+| `tests/test_features.py`, `test_accounts.py`, `test_settings_service.py`, `test_web.py` | Stage 2 tests. |
 | `.pre-commit-config.yaml` | Local hooks (ruff check --fix, ruff format, mypy) run through `uv run`, so they use `.venv` and the versions in `uv.lock`. |
 
 **Already done:**
@@ -53,7 +59,7 @@ The owner wants to build the app in segments and fully understand every one. Fol
 - README and `.gitignore`.
 - Python tooling: uv, ruff (lint + format), mypy strict and pytest are configured and all run clean; pre-commit runs ruff and mypy on every commit.
 
-**Not done yet** (still planned): Stage 2 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. There are no accounts, UI or AI code yet.
+**Not done yet** (still planned): Stage 3 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. There is no logging UI, reminders or AI code yet.
 
 Python is pinned to 3.12 with `.python-version` (ADR 0003), matching CI and Docker; simglucose does not work on 3.14.
 
@@ -103,7 +109,7 @@ A Python web app (installable on a phone as a PWA) that logs glucose and insulin
 | Quality | pytest, hypothesis, ruff, mypy, pre-commit |
 | CI / packaging | GitHub Actions, Docker Compose |
 
-Installed so far: ruff, mypy, pytest, pre-commit, FastAPI, uvicorn, pydantic-settings, SQLAlchemy, Alembic, psycopg, httpx (dev, for tests) and simglucose (optional `sim` group). Add the others in the stage that first needs them, and explain each one when it is introduced.
+Installed so far: ruff, mypy, pytest, pre-commit, FastAPI, uvicorn, pydantic-settings, SQLAlchemy, Alembic, psycopg, argon2-cffi, Jinja2, python-multipart, itsdangerous, httpx (dev, for tests) and simglucose (optional `sim` group). Add the others in the stage that first needs them, and explain each one when it is introduced.
 
 ### Architecture
 
@@ -194,7 +200,7 @@ Done when an empty app runs locally, in Docker and in CI.
 - [x] Write CLAUDE.md (conventions, pointer to this plan, "explain before coding" rule) and a `docs/adr/` folder for decisions
 - [x] Domain glossary: ICR, ISF, IOB, TIR, basal, bolus, CGM, AGP
 
-### Stage 1: Domain model and data layer (done, pending owner approval)
+### Stage 1: Domain model and data layer (done)
 
 Done when every core entity can be saved, read and migrated.
 
@@ -204,15 +210,15 @@ Done when every core entity can be saved, read and migrated.
 - [x] Seed script that generates 30 days of simulated data with simglucose
 - [x] Unit tests for models and conversions
 
-### Stage 2: Accounts, onboarding and settings
+### Stage 2: Accounts, onboarding and settings (done, pending owner approval)
 
 Done when a new user picks pump or pens and glucometer or CGM, and the app changes accordingly.
 
-- [ ] Sign-up and login (FastAPI session or JWT, passwords hashed with argon2)
-- [ ] Onboarding wizard: the two switches, units, target range, ICR and ISF by time of day, insulin action time, max bolus
-- [ ] Feature-flag service derived from settings (one function, fully tested)
-- [ ] Settings page with history of every change (who, when, old value, new value)
-- [ ] Base layout, navigation and PWA manifest
+- [x] Sign-up and login (FastAPI session or JWT, passwords hashed with argon2)
+- [x] Onboarding wizard: the two switches, units, target range, ICR and ISF by time of day, insulin action time, max bolus
+- [x] Feature-flag service derived from settings (one function, fully tested)
+- [x] Settings page with history of every change (who, when, old value, new value)
+- [x] Base layout, navigation and PWA manifest
 
 ### Stage 3: Glucose logging (glucometer mode)
 
