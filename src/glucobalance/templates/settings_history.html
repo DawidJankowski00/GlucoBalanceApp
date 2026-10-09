@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Settings history · {{ app_name }}{% endblock %}
+{% block content %}
+<h1 class="mb-4 text-2xl font-semibold">Settings history</h1>
+{% if changes %}
+<div class="overflow-x-auto">
+<table class="w-full text-sm">
+  <thead><tr class="border-b text-left text-slate-600"><th class="py-1 pr-3">When (UTC)</th><th class="pr-3">Setting</th><th class="pr-3">Old</th><th class="pr-3">New</th><th class="pr-3">By</th><th>Source</th></tr></thead>
+  <tbody>
+  {% for c in changes %}
+  <tr class="border-b align-top">
+    <td class="py-1 pr-3 whitespace-nowrap">{{ c.when.strftime("%Y-%m-%d %H:%M") }}</td>
+    <td class="pr-3">{{ c.field }}</td>
+    <td class="pr-3">{{ c.old if c.old is not none else "–" }}</td>
+    <td class="pr-3">{{ c.new }}</td>
+    <td class="pr-3">{{ c.by }}</td>
+    <td>{{ c.source }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}<p class="text-slate-600">No changes yet.</p>{% endif %}
+{% endblock %}

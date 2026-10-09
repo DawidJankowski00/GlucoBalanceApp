@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <meta name="theme-color" content="#0f766e">
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900" hx-boost="true">
+  <header class="bg-teal-700 text-white">
+    <nav class="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
+      <a href="/" class="text-lg font-semibold">{{ app_name }}</a>
+      {% if user and user.settings %}
+      <div class="flex items-center gap-4 text-sm">
+        <a href="/" class="hover:underline">Home</a>
+        <a href="/settings" class="hover:underline">Settings</a>
+        <a href="/settings/history" class="hover:underline">History</a>
+        <form method="post" action="/logout" hx-boost="false">
+          <button class="rounded bg-teal-800 px-2 py-1 hover:bg-teal-900">Log out</button>
+        </form>
+      </div>
+      {% elif user %}
+      <form method="post" action="/logout" hx-boost="false">
+        <button class="rounded bg-teal-800 px-2 py-1 text-sm hover:bg-teal-900">Log out</button>
+      </form>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="mx-auto max-w-3xl px-4 py-6">
+    {% if flash %}<p class="mb-4 rounded bg-teal-100 px-3 py-2 text-teal-900" role="status">{{ flash }}</p>{% endif %}
+    {% if error %}<p class="mb-4 rounded bg-red-100 px-3 py-2 text-red-900" role="alert">{{ error }}</p>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="mx-auto max-w-3xl px-4 pb-8 text-xs text-slate-500">
+    Not a medical device and not medical advice. Agree your settings with your diabetes team.
+  </footer>
+</body>
+</html>

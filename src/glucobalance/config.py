@@ -3,7 +3,10 @@
 from functools import lru_cache
 from typing import Literal
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DEV_SECRET_KEY = "dev-only-secret-change-me"
 
 
 class Settings(BaseSettings):
@@ -20,6 +23,14 @@ class Settings(BaseSettings):
     environment: Literal["development", "test", "production"] = "development"
     debug: bool = False
     database_url: str = "postgresql+psycopg://glucobalance:change-me@localhost:5432/glucobalance"
+    # Signs the login cookie. Set a long random value in production (GBA_SECRET_KEY).
+    secret_key: str = DEV_SECRET_KEY
+
+    @model_validator(mode="after")
+    def _require_real_secret_in_production(self) -> "Settings":
+        if self.environment == "production" and self.secret_key == DEV_SECRET_KEY:
+            raise ValueError("GBA_SECRET_KEY must be set to a private value in production")
+        return self
 
 
 @lru_cache

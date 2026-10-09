@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_macros.html" import block_rows, button %}
+{% block title %}Set up · {{ app_name }}{% endblock %}
+{% block content %}
+{% include "onboarding/_progress.html" %}
+<h1 class="mb-1 text-2xl font-semibold">Carb ratio and sensitivity by time of day</h1>
+<p class="mb-4 text-sm text-slate-600">Each block applies from its start time until the next one begins. The first block must start at 00:00. Leave unused rows empty.</p>
+<form method="post" action="/onboarding/3" class="space-y-6" hx-boost="false">
+  {{ block_rows(values, rows, values.display_unit) }}
+  <div class="flex gap-3">
+    <a href="/onboarding/2" class="rounded border border-slate-300 px-4 py-2">Back</a>
+    {{ button("Finish") }}
+  </div>
+</form>
+{% endblock %}
