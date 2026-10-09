@@ -21,6 +21,8 @@ from glucobalance.models import (
     InsulinDose,
     Note,
     Reminder,
+    SiteBlock,
+    SitePreference,
     SitePurpose,
     SiteUse,
     User,
@@ -206,6 +208,43 @@ class SiteRepository(Repository[BodySite]):
             .group_by(SiteUse.site_id)
         )
         return {site_id: used_at for site_id, used_at in rows}
+
+    def last_use(self, user_id: int, purpose: SitePurpose) -> SiteUse | None:
+        """The most recent use for ``purpose``, or ``None``."""
+        return self.session.scalars(
+            select(SiteUse)
+            .where(SiteUse.user_id == user_id, SiteUse.purpose == purpose)
+            .order_by(SiteUse.used_at.desc(), SiteUse.id.desc())
+            .limit(1)
+        ).one_or_none()
+
+    def active_blocks(self, user_id: int, now: datetime) -> Sequence[SiteBlock]:
+        """Blocks in force at ``now`` (started, and not yet ended), ordered by site code."""
+        return self.session.scalars(
+            select(SiteBlock)
+            .join(SiteBlock.site)
+            .where(
+                SiteBlock.user_id == user_id,
+                SiteBlock.blocked_at <= now,
+                (SiteBlock.until.is_(None)) | (SiteBlock.until > now),
+            )
+            .order_by(BodySite.code, SiteBlock.id)
+        ).all()
+
+    def add_block(self, block: SiteBlock) -> SiteBlock:
+        self.session.add(block)
+        self.session.flush()
+        return block
+
+    def weights(self, user_id: int) -> dict[int, SitePreference]:
+        """The user's preference for each site id they have set one for."""
+        rows = self.session.scalars(select(SitePreference).where(SitePreference.user_id == user_id))
+        return {pref.site_id: pref for pref in rows}
+
+    def add_preference(self, preference: SitePreference) -> SitePreference:
+        self.session.add(preference)
+        self.session.flush()
+        return preference
 
 
 class ReminderRepository(Repository[Reminder]):

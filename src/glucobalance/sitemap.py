@@ -26,6 +26,11 @@ class SiteSpec:
     def code(self) -> str:
         return f"{self.region}-{self.view}-{self.side}-{self.zone}"
 
+    @property
+    def label(self) -> str:
+        """A name for people, for example "Abdomen, left, upper (front)"."""
+        return f"{self.region.capitalize()}, {self.side}, {self.zone} ({self.view})"
+
 
 # Each region is listed once, for the left side; the right side mirrors it.
 _ZONES: tuple[tuple[SiteRegion, BodyView, tuple[str, ...]], ...] = (
@@ -43,6 +48,14 @@ SITES: tuple[SiteSpec, ...] = tuple(
     for region, view, zones in _ZONES
     for zone in zones
 )
+
+_BY_CODE = {site.code: site for site in SITES}
+
+
+def site_label(code: str) -> str:
+    """The label for a site code; unknown codes are returned unchanged."""
+    spec = _BY_CODE.get(code)
+    return spec.label if spec else code
 
 
 def seed_body_sites(session: Session) -> None:

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from glucobalance.models.sites import BodySide, BodySite, BodyView, SiteRegion
 from glucobalance.repositories import SiteRepository
-from glucobalance.sitemap import SITES, SiteSpec, seed_body_sites
+from glucobalance.sitemap import SITES, SiteSpec, seed_body_sites, site_label
 
 
 def test_codes_are_unique() -> None:
@@ -71,3 +71,11 @@ def test_seed_leaves_existing_rows_alone(session: Session) -> None:
 
     again = session.query(BodySite).order_by(BodySite.id).first()
     assert again is not None and again.id == first_id
+
+
+def test_site_label_names_region_side_zone_and_view() -> None:
+    assert site_label("abdomen-front-left-upper") == "Abdomen, left, upper (front)"
+
+
+def test_an_unknown_code_is_its_own_label() -> None:
+    assert site_label("elbow") == "elbow"

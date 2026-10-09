@@ -17,6 +17,7 @@ from glucobalance.web import (
     logbook_pages,
     onboarding,
     pages,
+    sites,
     today,
 )
 from glucobalance.web.deps import LoginRequired, login_required_handler
@@ -57,6 +58,7 @@ def create_app(
     app.include_router(today.router)
     app.include_router(chart_page.router)
     app.include_router(logbook_pages.router)
+    app.include_router(sites.router)
 
     @app.get("/health")
     def health() -> dict[str, str]:

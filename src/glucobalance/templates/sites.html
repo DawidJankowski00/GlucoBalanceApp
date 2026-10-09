@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% from "_macros.html" import button %}
+{% block title %}Sites · {{ app_name }}{% endblock %}
+{% block content %}
+<h1 class="mb-1 text-2xl font-semibold">Sites</h1>
+<p class="mb-4 text-sm text-slate-600">The site that has rested longest comes first. Sites marked not available are never suggested.</p>
+
+{% if set_change %}
+<p class="mb-4 rounded border border-slate-200 bg-white px-3 py-2 text-sm">
+  {% if set_change.last_change is none %}No set change logged yet. Change every {{ set_change_days }} days.
+  {% elif set_change.overdue %}<span class="font-semibold text-red-800">Set change is overdue.</span>
+  {% else %}{{ set_change.days_left }} day{% if set_change.days_left != 1 %}s{% endif %} until the next set change.
+  {% endif %}
+</p>
+{% endif %}
+
+{% for r in rotations %}
+<section class="mb-4 rounded border border-slate-200 bg-white p-4">
+  <h2 class="font-medium">{{ r.label }}</h2>
+  {% if r.code %}
+  <p class="my-2 text-lg">Next: <span class="font-semibold">{{ r.site }}</span></p>
+  <form method="post" action="/sites/use" class="inline">
+    <input type="hidden" name="code" value="{{ r.code }}">
+    <input type="hidden" name="purpose" value="{{ r.purpose }}">
+    {{ button("Use this site") }}
+  </form>
+  {% if r.can_skip %}<a href="/sites?skip_{{ r.purpose }}={{ r.next_skip }}" class="ml-3 text-sm underline">Skip to the next site</a>{% endif %}
+  {% else %}
+  <p class="my-2 text-sm text-slate-600">Every site is marked not available or avoided.</p>
+  {% endif %}
+</section>
+{% endfor %}
+
+<h2 class="mb-2 mt-6 font-medium">Not available</h2>
+{% if blocks %}
+<ul class="mb-4 divide-y divide-slate-200 rounded border border-slate-200 bg-white">
+  {% for b in blocks %}
+  <li class="flex items-center justify-between px-3 py-2 text-sm">
+    <span>{{ b.site }}
+      <span class="text-slate-500">· {% if b.until %}until {{ b.until.strftime("%d %b %Y") }}{% else %}until you remove it{% endif %}{% if b.reason %} · {{ b.reason }}{% endif %}</span>
+    </span>
+    <form method="post" action="/sites/unblock">
+      <input type="hidden" name="code" value="{{ b.code }}">
+      <button class="text-teal-800 underline">Make available</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="mb-4 text-sm text-slate-500">Every site is available.</p>
+{% endif %}
+
+<form method="post" action="/sites/block" class="mb-6 space-y-3 rounded border border-slate-200 bg-white p-4">
+  <h3 class="font-medium">Mark a site not available</h3>
+  <label class="block"><span class="text-sm font-medium">Site</span>
+    <select name="code" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2" required>
+      {% for code, label in sites %}<option value="{{ code }}">{{ label }}</option>{% endfor %}
+    </select>
+  </label>
+  <label class="block"><span class="text-sm font-medium">Until (optional)</span>
+    <input type="date" name="until" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2">
+    <span class="text-xs text-slate-500">Leave empty for a lump, scar or tattoo that does not go away.</span>
+  </label>
+  <label class="block"><span class="text-sm font-medium">Reason (optional)</span>
+    <input type="text" name="reason" maxlength="100" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2">
+  </label>
+  {{ button("Mark not available") }}
+</form>
+
+<form method="post" action="/sites/weight" class="space-y-3 rounded border border-slate-200 bg-white p-4">
+  <h3 class="font-medium">Site preference</h3>
+  <label class="block"><span class="text-sm font-medium">Site</span>
+    <select name="code" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2" required>
+      {% for code, label in sites %}<option value="{{ code }}">{{ label }}{% if code in weights %} ({{ weight_options.get(weights[code], weights[code]) }}){% endif %}</option>{% endfor %}
+    </select>
+  </label>
+  <label class="block"><span class="text-sm font-medium">How often</span>
+    <select name="weight" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2">
+      {% for value, label in weight_options.items() %}<option value="{{ value }}" {% if value == "1" %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </label>
+  {{ button("Save preference") }}
+</form>
+{% endblock %}
