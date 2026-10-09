@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "_macros.html" import button, field %}
+{% block title %}CGM connection · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="mb-4 flex items-baseline justify-between">
+  <h1 class="text-2xl font-semibold">CGM connection</h1>
+  <a class="text-sm text-teal-700 underline" href="/live">Live view</a>
+</div>
+{% if not cgm %}
+<p class="mb-4 rounded bg-amber-100 px-3 py-2 text-amber-900">Glucose monitoring is set to glucometer, so nothing is imported. Switch it to CGM in <a class="underline" href="/settings">Settings</a>.</p>
+{% endif %}
+
+{% if connection and connection.enabled %}
+<section class="mb-6 rounded border border-slate-200 bg-white p-4 text-sm">
+  <p><span class="font-medium">Source:</span> {{ "LibreLinkUp" if libre else "Simulator (demo data)" }}, every {{ connection.poll_minutes }} min</p>
+  <p><span class="font-medium">Last successful poll:</span> {{ last_success or "not yet" }}</p>
+  {% if connection.last_error %}<p class="text-red-800"><span class="font-medium">Last error:</span> {{ connection.last_error }}</p>{% endif %}
+  {% if retry_after %}<p class="text-slate-600">Waiting until {{ retry_after }} before trying again.</p>{% endif %}
+  <form method="post" action="/settings/cgm/test" class="mt-3"><button class="rounded border border-teal-700 px-3 py-1 text-teal-800">Test connection now</button></form>
+</section>
+{% endif %}
+
+<h2 class="mb-2 text-lg font-medium">LibreLinkUp</h2>
+<div class="mb-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+  <p class="font-medium">Important</p>
+  <p>LibreLinkUp is not an official interface for other apps. Abbott is moving it to encrypted communication; when the old interface is switched off, this import will likely stop working. Readings from here are for information only.</p>
+</div>
+<form method="post" action="/settings/cgm" class="mb-6 space-y-4 rounded border border-slate-200 bg-white p-4" hx-boost="false">
+  <label class="flex items-start justify-between gap-4">
+    <span><span class="block font-medium">Enable</span><span class="text-sm text-slate-600">Turn on the LibreLinkUp follower once the e-mail and password are entered.</span></span>
+    <input type="checkbox" name="enabled" class="mt-1 h-5 w-5" {% if libre and connection.enabled %}checked{% endif %}>
+  </label>
+  <label class="flex items-start justify-between gap-4">
+    <span><span class="block font-medium">Automatically accept new terms of use</span><span class="text-sm text-slate-600">Keeps data flowing when Abbott publishes new terms. You will not be told about each new version. To read them, turn this off and log in to the LibreLinkUp app when the import reports new terms.</span></span>
+    <input type="checkbox" name="auto_accept_terms" class="mt-1 h-5 w-5" {% if not connection or connection.auto_accept_terms %}checked{% endif %}>
+  </label>
+  {{ field("E-mail", "email", connection.email if libre and connection.email else "", "email", 'autocomplete="username" maxlength="320"', "The LibreLinkUp follower account used only by this app.") }}
+  {{ field("Password", "password", "", "password", 'autocomplete="current-password" placeholder="' ~ ("Saved. Leave empty to keep it." if libre and connection.password_encrypted else "LibreLinkUp password") ~ '"', "Stored encrypted. Never shown again." if has_key else "The server has no GBA_CGM_SECRET_KEY, so a password cannot be saved yet.") }}
+  <label class="block">
+    <span class="text-sm font-medium">Server</span>
+    <select name="server" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2">
+      {% for value, label in servers.items() %}<option value="{{ value }}" {% if (connection.server if connection else "io") == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </label>
+  {% if patients %}
+  <label class="block">
+    <span class="text-sm font-medium">Patient</span>
+    <select name="patient_id" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2">
+      {% for p in patients %}<option value="{{ p.patient_id }}" {% if connection and connection.patient_id == p.patient_id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+    </select>
+    <span class="text-xs text-slate-500">If this account follows more than one person, choose whose readings to import.</span>
+  </label>
+  {% elif libre and connection.patient_id %}
+  <p class="text-sm text-slate-600">Following one shared patient. Use "Test connection now" to choose another.</p>
+  {% endif %}
+  <label class="block">
+    <span class="text-sm font-medium">Check for new readings every</span>
+    <select name="poll_minutes" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2">
+      {% for m in poll_choices %}<option value="{{ m }}" {% if (connection.poll_minutes if connection else 5) == m %}selected{% endif %}>{{ m }} min</option>{% endfor %}
+    </select>
+  </label>
+  <label class="flex items-start justify-between gap-4">
+    <span><span class="block font-medium">Reconnect</span><span class="text-sm text-slate-600">On the next check a new login is made.</span></span>
+    <input type="checkbox" name="reconnect" class="mt-1 h-5 w-5">
+  </label>
+  {{ button("Save LibreLinkUp settings") }}
+</form>
+
+<section class="mb-6 rounded border border-slate-200 bg-white p-4 text-sm text-slate-700">
+  <h3 class="mb-1 font-medium text-slate-900">LibreLinkUp setup</h3>
+  <p class="mb-2"><span class="font-medium">This is not the account of the FreeStyle Libre app.</span> To start following:</p>
+  <ol class="list-decimal space-y-1 pl-5">
+    <li>Open the FreeStyle Libre app and choose Share or Connected Apps in the menu.</li>
+    <li>Turn on the LibreLinkUp connection and invite a separate e-mail address.</li>
+    <li>Install LibreLinkUp on any phone, create the account for that address and accept the invitation.</li>
+    <li>Enter that account here. Use it only for this app: several apps on one account cause "too many requests" errors.</li>
+  </ol>
+</section>
+
+<h2 class="mb-2 text-lg font-medium">Simulator</h2>
+<form method="post" action="/settings/cgm/simulator" class="mb-6 space-y-3 rounded border border-slate-200 bg-white p-4">
+  <p class="text-sm text-slate-600">A pretend CGM that replays a simulated day, for trying the live view and alerts without a sensor. Its readings are marked as simulated. Turning it on replaces LibreLinkUp.</p>
+  <label class="flex items-center gap-3">
+    <input type="checkbox" name="enabled" class="h-5 w-5" {% if simulator and connection.enabled %}checked{% endif %}>
+    <span class="font-medium">Use the simulated CGM</span>
+  </label>
+  {{ button("Save simulator setting") }}
+</form>
+{% endblock %}

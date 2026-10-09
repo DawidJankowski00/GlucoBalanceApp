@@ -19,6 +19,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from glucobalance.cgm.base import trend_from_rate
 from glucobalance.config import get_settings
 from glucobalance.db import make_engine, make_session_factory
 from glucobalance.models import (
@@ -61,16 +62,7 @@ class SimulatedData:
 
 def trend_from_change(previous_mgdl: int, current_mgdl: int, minutes: float) -> Trend:
     """Classify the rate of change in mg/dL per minute, like a CGM trend arrow."""
-    rate = (current_mgdl - previous_mgdl) / minutes
-    if rate < -2:
-        return Trend.FALLING_FAST
-    if rate < -1:
-        return Trend.FALLING
-    if rate <= 1:
-        return Trend.STEADY
-    if rate <= 2:
-        return Trend.RISING
-    return Trend.RISING_FAST
+    return trend_from_rate((current_mgdl - previous_mgdl) / minutes)
 
 
 def from_results(frame: Any, basal_u_per_min: float, sample_minutes: float) -> SimulatedData:

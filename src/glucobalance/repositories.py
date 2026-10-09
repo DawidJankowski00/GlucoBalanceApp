@@ -15,6 +15,7 @@ from glucobalance.db import Base
 from glucobalance.models import (
     BodySite,
     CarbEntry,
+    CGMConnection,
     FavouriteMeal,
     GlucoseReading,
     HypoTreatment,
@@ -22,6 +23,7 @@ from glucobalance.models import (
     Note,
     Notification,
     PushSubscription,
+    ReadingSource,
     Reminder,
     ReminderKind,
     SiteBlock,
@@ -108,6 +110,15 @@ class GlucoseRepository(Repository[GlucoseReading]):
                 GlucoseReading.measured_at >= start,
                 GlucoseReading.measured_at < end,
             )
+            .order_by(GlucoseReading.measured_at.desc())
+            .limit(1)
+        ).first()
+
+    def latest_from(self, user_id: int, source: ReadingSource) -> GlucoseReading | None:
+        """The newest reading from one source, such as the CGM."""
+        return self.session.scalars(
+            select(GlucoseReading)
+            .where(GlucoseReading.user_id == user_id, GlucoseReading.source == source)
             .order_by(GlucoseReading.measured_at.desc())
             .limit(1)
         ).first()
@@ -417,4 +428,18 @@ class HypoRepository(Repository[HypoTreatment]):
             .where(HypoTreatment.user_id == user_id)
             .order_by(HypoTreatment.treated_at.desc(), HypoTreatment.id.desc())
             .limit(limit)
+        ).all()
+
+
+class CGMConnectionRepository(Repository[CGMConnection]):
+    model = CGMConnection
+
+    def for_user(self, user_id: int) -> CGMConnection | None:
+        return self.session.scalars(
+            select(CGMConnection).where(CGMConnection.user_id == user_id)
+        ).one_or_none()
+
+    def enabled(self) -> Sequence[CGMConnection]:
+        return self.session.scalars(
+            select(CGMConnection).where(CGMConnection.enabled.is_(True)).order_by(CGMConnection.id)
         ).all()

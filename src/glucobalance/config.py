@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     vapid_private_key: str | None = None
     vapid_public_key: str | None = None
     vapid_contact: str = "mailto:admin@example.com"
+    # CGM import. The key encrypts the LibreLinkUp follower password in the database; make one
+    # with ``uv run python -m glucobalance.cgm.crypto``. The job checks this often which CGM
+    # connections are due (each has its own 1 to 5 minute interval).
+    cgm_secret_key: str | None = None
+    cgm_tick_seconds: int = Field(default=60, ge=15)
 
     @property
     def run_scheduler(self) -> bool:

@@ -1,0 +1,28 @@
+{% if connection is none or not connection.enabled %}
+<p class="rounded border border-slate-200 bg-white p-4 text-slate-700">No CGM is connected yet. Set up <a class="underline" href="/settings/cgm">LibreLinkUp or the simulator</a>.</p>
+{% endif %}
+{% if latest %}
+{% set colour = {"low": "border-red-500 bg-red-50 text-red-900", "high": "border-amber-500 bg-amber-50 text-amber-900", "in_range": "border-teal-600 bg-white text-slate-900"}[latest.level] %}
+<section class="mb-4 rounded-lg border-2 p-6 text-center {{ colour }} {{ 'opacity-60' if stale }}" aria-live="polite">
+  <p class="text-6xl font-semibold tabular-nums">{{ latest.value }}
+    {% if latest.arrow and not stale %}<span class="ml-2" aria-label="{{ latest.trend }}" title="{{ latest.trend }}">{{ latest.arrow }}</span>{% endif %}
+  </p>
+  <p class="mt-2 text-sm">{{ latest.when }} · {{ latest.ago }}{% if latest.trend and not stale %} · {{ latest.trend }}{% endif %}</p>
+  {% if latest.level == "low" %}<p class="mt-2 font-medium">Low. Treat it now and recheck in 15 minutes.</p>{% endif %}
+</section>
+{% endif %}
+{% if stale and connection and connection.enabled %}
+<p class="mb-4 rounded bg-amber-100 px-3 py-2 text-amber-900" role="alert">No new reading for more than 15 minutes. Do not dose from this value: check the sensor, the phone and the Libre app.</p>
+{% endif %}
+{% if connection and connection.last_error %}
+<p class="mb-4 rounded bg-red-100 px-3 py-2 text-red-900">Last poll failed: {{ connection.last_error }}</p>
+{% endif %}
+{% if spark %}
+<figure class="rounded border border-slate-200 bg-white p-3">
+  <svg viewBox="0 0 {{ spark.width }} {{ spark.height }}" class="h-24 w-full" preserveAspectRatio="none" role="img" aria-label="Glucose over the last 3 hours">
+    <rect x="0" y="{{ spark.band_top }}" width="{{ spark.width }}" height="{{ spark.band_height }}" class="fill-teal-100"></rect>
+    <polyline points="{{ spark.points }}" fill="none" class="stroke-teal-700" stroke-width="2" vector-effect="non-scaling-stroke"></polyline>
+  </svg>
+  <figcaption class="mt-1 text-xs text-slate-500">Last 3 hours. The shaded band is your target range.</figcaption>
+</figure>
+{% endif %}

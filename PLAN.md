@@ -282,16 +282,16 @@ Done when reminders arrive on the phone even when the app is closed.
 
 Done when Libre readings flow in automatically through LibreLinkUp, with the simulator as a second source for demos and tests. See design rule 2.
 
-- [ ] Document the account setup in the README: share to LibreLinkUp from the Libre app and accept the invite with a separate follower account used only by this app
-- [ ] `CGMSource` interface: `fetch_readings(since)` returning readings with trend
-- [ ] Simulator adapter (simglucose)
-- [ ] LibreLinkUp client with httpx: login, follow the regional redirect, list connections, read the current value and recent graph data (verify endpoints against an open-source client first)
-- [ ] Cache and reuse the auth token; log in again only when it expires
-- [ ] Polling job every 1 to 5 minutes (configurable), idempotent inserts keyed on timestamp, backoff on 429, stale-data detection
-- [ ] Recorded-response tests (respx or vcrpy, personal data removed)
-- [ ] Live view with trend arrow and high, low and fast-falling alerts
-- [ ] Store the follower password encrypted (Fernet key in an env variable); never log it
-- [ ] ADR with the risk note (unofficial interface, encrypted v5, terms of service)
+- [x] Document the account setup in the README: share to LibreLinkUp from the Libre app and accept the invite with a separate follower account used only by this app
+- [x] `CGMSource` interface: `fetch_readings(since)` returning readings with trend
+- [x] Simulator adapter (simglucose)
+- [x] LibreLinkUp client with httpx: login, follow the regional redirect, list connections, read the current value and recent graph data (verify endpoints against an open-source client first)
+- [x] Cache and reuse the auth token; log in again only when it expires
+- [x] Polling job every 1 to 5 minutes (configurable), idempotent inserts keyed on timestamp, backoff on 429, stale-data detection
+- [x] Recorded-response tests (respx or vcrpy, personal data removed)
+- [x] Live view with trend arrow and high, low and fast-falling alerts
+- [x] Store the follower password encrypted (Fernet key in an env variable); never log it
+- [x] ADR with the risk note (unofficial interface, encrypted v5, terms of service)
 
 ### Stage 7: Analytics and reports
 

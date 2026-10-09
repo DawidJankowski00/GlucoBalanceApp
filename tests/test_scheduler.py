@@ -109,7 +109,7 @@ def test_the_job_is_registered_once_and_survives_a_restart(tmp_path: Path) -> No
     # Building it again replaces the job instead of adding a second one.
     third = build_scheduler(settings, engine, factory, None)
     third.start(paused=True)
-    assert [j.id for j in third.get_jobs()] == [JOB_ID]
+    assert [j.id for j in third.get_jobs()] == [JOB_ID]  # no CGM runtime, no CGM job
     third.shutdown()
     engine.dispose()
 
@@ -128,3 +128,46 @@ def test_the_app_starts_the_scheduler_only_when_asked(engine: Engine) -> None:
         assert on.state.scheduler is not None
         assert on.state.scheduler.running
     assert not on.state.scheduler.running
+
+
+def test_the_cgm_job_is_added_with_a_runtime(tmp_path: Path) -> None:
+    import httpx
+
+    from glucobalance.cgm_service import CGMRuntime
+    from glucobalance.scheduler import CGM_JOB_ID
+
+    engine = make_engine(f"sqlite:///{tmp_path / 'jobs.db'}")
+    settings = Settings(environment="test", cgm_tick_seconds=30)
+    with httpx.Client() as http:
+        runtime = CGMRuntime(http=http, box=None, trace=lambda: [100])
+        scheduler = build_scheduler(settings, engine, make_session_factory(engine), None, runtime)
+        scheduler.start(paused=True)
+        job = scheduler.get_job(CGM_JOB_ID)
+        assert job is not None
+        assert job.trigger.interval == timedelta(seconds=30)
+        scheduler.shutdown()
+    engine.dispose()
+
+
+def test_a_cgm_tick_imports_readings_and_pushes_a_low_alert(engine: Engine) -> None:
+    import httpx
+
+    from glucobalance.cgm_service import CGMRuntime, use_simulator
+    from glucobalance.models import GlucoseReading, User
+    from glucobalance.scheduler import run_cgm_tick
+
+    factory = make_session_factory(engine)
+    with factory() as session:
+        user_with_phone(session)
+        user = session.query(User).one()
+        use_simulator(session, user, enabled=True)
+        session.commit()
+    sender = RecordingSender()
+
+    with httpx.Client() as http:
+        runtime = CGMRuntime(http=http, box=None, trace=lambda: [55])
+        assert run_cgm_tick(factory, sender, runtime, now=NOW) == 1
+
+    with factory() as session:
+        assert session.query(GlucoseReading).count() > 0
+    assert [p.title for p in sender.sent] == ["Low glucose"]

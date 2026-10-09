@@ -19,3 +19,5 @@ Use [0000-template.md](0000-template.md) as a starting point.
 | [0011](0011-svg-body-map.md) | The body map is an inline SVG drawn from Python geometry, with a 30-day heatmap |
 | [0012](0012-reminder-rules-and-apscheduler.md) | Reminder rules as pure functions, and APScheduler with a database job store |
 | [0013](0013-web-push-and-notification-centre.md) | Web Push with VAPID keys, and an in-app notification centre as the fallback |
+| [0014](0014-librelinkup-behind-a-cgm-source.md) | LibreLinkUp behind a CGM source interface, with a simulator for demos and tests |
+| [0015](0015-cgm-polling-secrets-and-live-alerts.md) | CGM polling with backoff, encrypted follower secrets, and one alert per episode |

@@ -1,0 +1,10 @@
+{
+  "status": 0,
+  "data": {
+    "user": {"id": "11111111-2222-3333-4444-555555555555", "firstName": "Test", "lastName": "Follower", "email": "follower@example.com", "country": "PL", "uiLanguage": "pl-PL"},
+    "messages": {"unread": 0},
+    "notifications": {"unresolved": 0},
+    "authTicket": {"token": "fake-token-1", "expires": 1807000000, "duration": 15552000000},
+    "invitations": null
+  }
+}

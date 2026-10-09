@@ -36,9 +36,9 @@ At onboarding the user picks two options, and every screen, reminder and assista
 
 ### CGM import from LibreLinkUp
 
-Libre readings will be imported through LibreLinkUp, the same way [GlucoDataHandler](https://github.com/pachi81/GlucoDataHandler) does. The app will use its own follower account, because several apps sharing one account trigger "429 Too Many Requests" and false login errors. A simulator ([simglucose](https://github.com/jxx123/simglucose)) will feed tests, CI and the public demo, so they never call Abbott's servers.
+Libre readings are imported through LibreLinkUp, the same way [GlucoDataHandler](https://github.com/pachi81/GlucoDataHandler) does. The app uses its own follower account, because several apps sharing one account trigger "429 Too Many Requests" and false login errors. A simulator ([simglucose](https://github.com/jxx123/simglucose)) feeds tests, CI and demos, so they never call Abbott's servers.
 
-LibreLinkUp access is unofficial and could change, so CGM sources sit behind one interface and another source (for example Nightscout) can be added without touching the rest of the app.
+LibreLinkUp access is unofficial and could change (Abbott is moving it to an encrypted interface), so CGM sources sit behind one interface and another source (for example Nightscout) can be added without touching the rest of the app. See [ADR 0014](docs/adr/0014-librelinkup-behind-a-cgm-source.md).
 
 ### AI dosing assistant
 
@@ -82,7 +82,7 @@ Each stage ends with something that can be demonstrated.
 - [x] **Stage 3: Glucose logging.** Manual entry, insulin and carb logging, daily charts.
 - [x] **Stage 4: Site rotation engine.** Next-site suggestions for pump and pens, blocked sites, body map.
 - [x] **Stage 5: Reminders and notifications.** Scheduled reminders and Web Push.
-- [ ] **Stage 6: CGM integration.** LibreLinkUp client and simulator source.
+- [x] **Stage 6: CGM integration.** LibreLinkUp client and simulator source.
 - [ ] **Stage 7: Analytics and reports.** Time in range, glucose profile, pattern detection, PDF report.
 - [ ] **Stage 8: AI assistant, deterministic core.** Bolus calculator, insulin on board, capped suggestions.
 - [ ] **Stage 9: AI assistant, LLM agent.** Tool-calling agent, guardrails, evaluation suite.
@@ -112,6 +112,19 @@ docker compose up --build
 Open <http://localhost:8000> and create an account. The onboarding wizard asks for insulin delivery (pump or pens), glucose monitoring (glucometer or CGM), units, targets, insulin action time, maximum bolus and carb ratio / sensitivity by time of day. Settings can be changed later on the Settings page, and every change is kept in the history. <http://localhost:8000/health> reports that the app is running.
 
 Set `GBA_SECRET_KEY` (it signs the login cookie) to a long random value; the app refuses to start in production without one. To fill a demo user with 30 days of simulated pump and CGM data: `uv run --group sim python -m glucobalance.seed --days 30`.
+
+**Connecting a FreeStyle Libre (LibreLinkUp)**
+
+The app reads Libre values as a LibreLinkUp *follower*. This is not the account of the FreeStyle Libre app.
+
+1. Make a key for storing the password encrypted and put it in `.env` as `GBA_CGM_SECRET_KEY`:
+   `uv run python -m glucobalance.cgm.crypto`
+2. In the FreeStyle Libre app, open the menu, choose Share (or Connected Apps) and turn on LibreLinkUp. Invite a separate e-mail address that you use only for this app.
+3. Install LibreLinkUp on any phone, create the account for that address and accept the invitation. Log out of LibreLinkUp afterwards, so this app is the only one using the account.
+4. In GlucoBalanceApp choose CGM under Settings, open **CGM connection**, enter the follower e-mail and password, pick the server (Default `.io` unless your account is Russian), tick Enable and save. **Test connection now** logs in, lists the people the account follows and imports the last 12 hours.
+5. The **Live** page shows the current value with its trend arrow. Low, high, fast-falling and "no new readings" alerts go to the Alerts page and, if push is set up, to your phone.
+
+To try it without a sensor, turn on **Use the simulated CGM** on the same page.
 
 **Checks**
 

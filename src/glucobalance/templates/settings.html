@@ -14,6 +14,7 @@
   <fieldset>
     <legend class="mb-2 font-medium">Glucose monitoring</legend>
     {{ choice("monitoring_mode", values.monitoring_mode, [("glucometer", "Glucometer", "Readings you enter yourself."), ("cgm", "CGM", "Readings arrive automatically.")]) }}
+    <p class="mt-2 text-sm"><a class="text-teal-700 underline" href="/settings/cgm">CGM connection (LibreLinkUp or simulator)</a></p>
   </fieldset>
   <fieldset>
     <legend class="mb-2 font-medium">Glucose units</legend>

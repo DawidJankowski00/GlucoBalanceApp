@@ -22,6 +22,7 @@ services:
       GBA_VAPID_PRIVATE_KEY: ${GBA_VAPID_PRIVATE_KEY:-}
       GBA_VAPID_PUBLIC_KEY: ${GBA_VAPID_PUBLIC_KEY:-}
       GBA_VAPID_CONTACT: ${GBA_VAPID_CONTACT:-mailto:admin@example.com}
+      GBA_CGM_SECRET_KEY: ${GBA_CGM_SECRET_KEY:-}
     ports:
       - "8000:8000"
     depends_on:

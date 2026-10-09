@@ -1,0 +1,17 @@
+{
+  "status": 0,
+  "data": [
+    {
+      "id": "aaaaaaaa-0000-0000-0000-000000000001",
+      "patientId": "aaaaaaaa-bbbb-cccc-dddd-000000000001",
+      "country": "PL",
+      "status": 2,
+      "firstName": "Pat",
+      "lastName": "Example",
+      "sensor": {"deviceId": "", "sn": "0M0000FAKE", "a": 1759500000, "w": 60, "pt": 4},
+      "glucoseMeasurement": {"FactoryTimestamp": "10/9/2026 6:20:00 PM", "Timestamp": "10/9/2026 8:20:00 PM", "type": 1, "ValueInMgPerDl": 112, "TrendArrow": 3, "TrendMessage": null, "MeasurementColor": 1, "GlucoseUnits": 1, "Value": 112, "isHigh": false, "isLow": false},
+      "targetLow": 70,
+      "targetHigh": 180
+    }
+  ]
+}
