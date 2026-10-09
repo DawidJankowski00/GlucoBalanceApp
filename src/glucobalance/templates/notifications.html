@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Notifications · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="mb-4 flex items-center justify-between">
+  <h1 class="text-2xl font-semibold">Notifications</h1>
+  {% if unread %}
+  <form method="post" action="/notifications/read-all">
+    <button class="rounded border border-teal-700 px-3 py-1 text-sm text-teal-800">Mark all read</button>
+  </form>
+  {% endif %}
+</div>
+{% if notifications %}
+<ul class="divide-y divide-slate-200 rounded border border-slate-200 bg-white">
+  {% for n in notifications %}
+  <li class="flex items-start justify-between gap-3 px-3 py-3 {{ 'bg-amber-50' if n.unread }}">
+    <div>
+      <p class="font-medium">{{ n.title }}</p>
+      {% if n.body %}<p class="text-sm text-slate-700">{{ n.body }}</p>{% endif %}
+      <p class="text-xs text-slate-500">{{ n.when.strftime("%d %b %H:%M") }}</p>
+    </div>
+    {% if n.unread %}
+    <form method="post" action="/notifications/{{ n.id }}/read">
+      <button class="rounded border border-slate-300 px-2 py-1 text-xs">Mark read</button>
+    </form>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+<p class="mt-3 text-sm text-slate-600">Mark a reminder done or snooze it on the <a class="underline" href="/reminders">reminders page</a>.</p>
+{% else %}
+<p class="text-sm text-slate-500">Nothing yet. Reminders show up here when they are due.</p>
+{% endif %}
+{% endblock %}

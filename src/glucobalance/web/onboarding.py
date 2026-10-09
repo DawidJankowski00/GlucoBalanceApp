@@ -4,12 +4,14 @@ Answers collect in the signed session cookie (``draft``) until the last step, so
 saved half-finished.
 """
 
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from glucobalance.models import ChangeSource, DisplayUnit
+from glucobalance.reminder_service import ensure_default_reminders
 from glucobalance.settings_service import SettingsError, apply_settings, is_valid_timezone
 from glucobalance.web.deps import CurrentUser, DbSession, Templates
 from glucobalance.web.forms import BLOCK_ROWS, parse_choices, parse_settings
@@ -107,6 +109,7 @@ async def submit_step(
             data = parse_settings(draft, require_blocks=step == LAST_STEP)
             if step == LAST_STEP:
                 apply_settings(db, user, data, ChangeSource.ONBOARDING, user)
+                ensure_default_reminders(db, user, now=datetime.now(UTC))
                 db.commit()
                 request.session.pop(DRAFT_KEY, None)
                 request.session["flash"] = "You're all set. Settings saved."

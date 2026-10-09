@@ -28,6 +28,14 @@ Plain-language definitions of the diabetes terms used in GlucoBalanceApp. This i
 - **Rest period:** how many days a site should rest before it is suggested again (default 14). A site still resting can be used, but only after every rested site.
 - **Blocked site:** a site marked not available, for a while (bruise, sport) or until removed (lump, scar, tattoo). It is never suggested.
 - **Property-based test:** a test that states a rule for every input (for example "a blocked site is never suggested") and lets Hypothesis generate hundreds of random inputs to try to break it.
+- **Reminder rule:** how a reminder is repeated: every N days, every day at a time, or a fixed delay after an event (for example 15 minutes after a low).
+- **Quiet hours:** a daily window (for example 22:00 to 07:00) when reminders wait until it ends. The recheck after a low ignores it.
+- **Snooze / done:** snooze pushes one reminder later by a chosen time; done records that you did it and restarts the countdown.
+- **Scheduler (APScheduler):** a library that runs a function on a timer inside the app. Here it checks every minute for reminders that are due. Its job list is kept in the database so a restart does not lose it.
+- **Web Push:** the standard way for a website to send a notification to a phone through the browser's push service, even when the site is closed.
+- **VAPID keys:** a public and private key pair that proves to the push service that the messages come from this server. Only the public key is shared.
+- **Service worker:** a small script the browser keeps running in the background for a site. Ours only shows push notifications.
+- **Notification centre:** the Alerts page in the app. Every reminder lands here first, so nothing is lost if a phone push fails.
 
 ## The bolus formula used in GBA
 

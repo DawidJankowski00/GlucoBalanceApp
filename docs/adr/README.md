@@ -17,3 +17,5 @@ Use [0000-template.md](0000-template.md) as a starting point.
 | [0009](0009-body-map-as-code-reference-data.md) | The body map is reference data defined in code and loaded by a migration |
 | [0010](0010-site-blocks-weights-and-rotations.md) | Site blocks with an optional end date, preference weights, and one rotation per purpose |
 | [0011](0011-svg-body-map.md) | The body map is an inline SVG drawn from Python geometry, with a 30-day heatmap |
+| [0012](0012-reminder-rules-and-apscheduler.md) | Reminder rules as pure functions, and APScheduler with a database job store |
+| [0013](0013-web-push-and-notification-centre.md) | Web Push with VAPID keys, and an in-app notification centre as the fallback |

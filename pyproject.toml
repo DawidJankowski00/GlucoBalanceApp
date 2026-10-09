@@ -8,6 +8,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 dependencies = [
     "alembic>=1.20.0",
+    "apscheduler>=3.11.3",
     "argon2-cffi>=25.1.0",
     "fastapi>=0.143.0",
     "httpx>=0.28.1",
@@ -16,6 +17,7 @@ dependencies = [
     "psycopg[binary]>=3.3.6",
     "pydantic-settings>=2.15.0",
     "python-multipart>=0.0.32",
+    "pywebpush>=2.5.0",
     "sqlalchemy>=2.1.4",
     "tzdata>=2026.5",
     "uvicorn>=0.54.0",
@@ -64,7 +66,7 @@ sim = [
     "simglucose>=0.2.11",
 ]
 
-# simglucose and pandas (optional "sim" group) ship no type information
+# simglucose, pandas (optional "sim" group), pywebpush and apscheduler ship no type information
 [[tool.mypy.overrides]]
-module = ["simglucose.*", "pandas.*"]
+module = ["simglucose.*", "pandas.*", "pywebpush.*", "apscheduler.*"]
 ignore_missing_imports = true

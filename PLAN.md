@@ -70,6 +70,11 @@ The owner wants to build the app in segments and fully understand every one. Fol
 | `src/glucobalance/bodymap.py` | Zone rectangles for the SVG body map, heat levels and 30-day use counts (ADR 0011). |
 | `tests/test_sitemap.py`, `test_rotation.py`, `test_site_service.py`, `test_web_sites.py`, `test_bodymap.py`, `test_web_bodymap.py`, `test_rotation_properties.py` | Stage 4 tests (the last one uses Hypothesis). |
 | `tests/test_foods.py`, `test_favourites.py`, `test_hypo_service.py`, `test_web_food_hypo.py` | Food search, favourites and hypo log tests. |
+| `src/glucobalance/reminder_rules.py` | Pure reminder maths: `next_daily()`, `next_every_n_days()`, `after_event()`, quiet hours and snooze (ADR 0012). |
+| `src/glucobalance/reminder_service.py`, `web/reminders.py` | Default reminders per mode, create, done, snooze, on/off, quiet hours, `fire_due_reminders()`, the hypo recheck and the missed-dose check; the `/reminders` and `/notifications` pages. |
+| `src/glucobalance/scheduler.py` | APScheduler with a database job store; one job runs `fire_due_reminders()` every minute and then pushes. Started by the app's lifespan. |
+| `src/glucobalance/push.py`, `web/push.py`, `static/sw.js`, `templates/_push.html` | Web Push: subscriptions, VAPID keys (`python -m glucobalance.push`), sending with `pywebpush`, the service worker and the turn-on button (ADR 0013). |
+| `tests/test_reminder_rules.py`, `test_reminder_service.py`, `test_web_reminders.py`, `test_scheduler.py`, `test_push.py`, `test_web_push.py` | Stage 5 tests. |
 | `.pre-commit-config.yaml` | Local hooks (ruff check --fix, ruff format, mypy) run through `uv run`, so they use `.venv` and the versions in `uv.lock`. |
 
 **Already done:**
@@ -78,7 +83,7 @@ The owner wants to build the app in segments and fully understand every one. Fol
 - README and `.gitignore`.
 - Python tooling: uv, ruff (lint + format), mypy strict and pytest are configured and all run clean; pre-commit runs ruff and mypy on every commit.
 
-**Not done yet** (still planned): Stage 5 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms, a Today timeline, daily and weekly charts (Plotly, ADR 0007) and a filterable logbook with CSV export followed, then food search, favourite meals and a hypo log (ADR 0008). Stage 4 added the body map (ADR 0009), the site ranking written by the owner, pump and pen rotations with blocked sites and preferences (ADR 0010), a clickable SVG body map with a heatmap (ADR 0011) and Hypothesis property tests. There are no reminders or AI code yet.
+**Not done yet** (still planned): Stage 6 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms, a Today timeline, daily and weekly charts (Plotly, ADR 0007) and a filterable logbook with CSV export followed, then food search, favourite meals and a hypo log (ADR 0008). Stage 4 added the body map (ADR 0009), the site ranking written by the owner, pump and pen rotations with blocked sites and preferences (ADR 0010), a clickable SVG body map with a heatmap (ADR 0011) and Hypothesis property tests. Stage 5 added reminders with every-N-days, daily and after-event rules, quiet hours, snooze and done (ADR 0012), an APScheduler job with a database job store, an in-app notification centre and Web Push with VAPID keys (ADR 0013). There is no AI code yet.
 
 Python is pinned to 3.12 with `.python-version` (ADR 0003), matching CI and Docker; simglucose does not work on 3.14.
 
@@ -266,12 +271,12 @@ Done when the app suggests the next site for both pump and pen users and respect
 
 Done when reminders arrive on the phone even when the app is closed.
 
-- [ ] Reminder model with rules (every N days, daily at a time, after an event)
-- [ ] APScheduler jobs that survive restarts (job store in PostgreSQL)
-- [ ] Web Push with VAPID keys; in-app notification centre as a fallback
-- [ ] Pump: set change and reservoir; pens: long-acting dose, missed dose, pen expiry; glucometer: check reminders; CGM: sensor change
-- [ ] Hypo recheck reminder 15 minutes after a low
-- [ ] Snooze, done and quiet hours
+- [x] Reminder model with rules (every N days, daily at a time, after an event)
+- [x] APScheduler jobs that survive restarts (job store in PostgreSQL)
+- [x] Web Push with VAPID keys; in-app notification centre as a fallback
+- [x] Pump: set change and reservoir; pens: long-acting dose, missed dose, pen expiry; glucometer: check reminders; CGM: sensor change
+- [x] Hypo recheck reminder 15 minutes after a low
+- [x] Snooze, done and quiet hours
 
 ### Stage 6: CGM integration
 

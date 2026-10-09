@@ -6,9 +6,11 @@ from typing import Any
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import object_session
 
 from glucobalance.features import feature_flags
 from glucobalance.models import User
+from glucobalance.reminder_service import unread_count
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
@@ -31,7 +33,12 @@ def render(
 ) -> HTMLResponse:
     """Render a template with the logged-in user, their feature flags and any flash message."""
     flags = None
+    unread = 0
     if user is not None and user.settings is not None:
         flags = feature_flags(user.settings.delivery_mode, user.settings.monitoring_mode)
-    context.update(user=user, flags=flags, flash=request.session.pop("flash", None))
+        # The user was loaded by this request's session; reuse it for the badge count.
+        session = object_session(user)
+        if session is not None:
+            unread = unread_count(session, user)
+    context.update(user=user, flags=flags, unread=unread, flash=request.session.pop("flash", None))
     return templates.TemplateResponse(request, name, context, status_code=status_code)

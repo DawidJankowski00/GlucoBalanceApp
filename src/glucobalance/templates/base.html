@@ -25,6 +25,8 @@
         <a href="/chart" class="hover:underline">Chart</a>
         <a href="/logbook" class="hover:underline">Logbook</a>
         <a href="/sites" class="hover:underline">Sites</a>
+        <a href="/reminders" class="hover:underline">Reminders</a>
+        <a href="/notifications" class="hover:underline">Alerts{% if unread %} <span class="rounded-full bg-amber-400 px-1.5 text-xs font-semibold text-slate-900">{{ unread }}</span>{% endif %}</a>
         <a href="/settings" class="hover:underline">Settings</a>
         <a href="/settings/history" class="hover:underline">History</a>
         <form method="post" action="/logout" hx-boost="false">

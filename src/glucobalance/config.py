@@ -3,7 +3,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEV_SECRET_KEY = "dev-only-secret-change-me"
@@ -25,6 +25,26 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://glucobalance:change-me@localhost:5432/glucobalance"
     # Signs the login cookie. Set a long random value in production (GBA_SECRET_KEY).
     secret_key: str = DEV_SECRET_KEY
+    # Reminders. The scheduler runs inside the web process; leave it on unless you run the
+    # app in several processes (then enable it in exactly one). Unset means "on, except in
+    # tests".
+    scheduler_enabled: bool | None = None
+    reminder_poll_seconds: int = Field(default=60, ge=5)
+    # Web Push. Make a key pair with ``uv run python -m glucobalance.push``. Without a private
+    # key reminders still appear in the app, but nothing is sent to phones.
+    vapid_private_key: str | None = None
+    vapid_public_key: str | None = None
+    vapid_contact: str = "mailto:admin@example.com"
+
+    @property
+    def run_scheduler(self) -> bool:
+        if self.scheduler_enabled is None:
+            return self.environment != "test"
+        return self.scheduler_enabled
+
+    @property
+    def push_enabled(self) -> bool:
+        return bool(self.vapid_private_key and self.vapid_public_key)
 
     @model_validator(mode="after")
     def _require_real_secret_in_production(self) -> "Settings":

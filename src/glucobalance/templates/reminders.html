@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% from "_macros.html" import button, field %}
+{% block title %}Reminders · {{ app_name }}{% endblock %}
+{% block content %}
+<h1 class="mb-1 text-2xl font-semibold">Reminders</h1>
+<p class="mb-4 text-sm text-slate-600">Reminders appear in <a class="underline" href="/notifications">Alerts</a> and, once you turn it on below, as phone notifications even when the app is closed.</p>
+
+<ul class="mb-6 space-y-2">
+  {% for r in reminders %}
+  <li class="rounded border bg-white p-3 {{ 'border-amber-400' if r.overdue else 'border-slate-200' }} {{ 'opacity-60' if not r.active }}">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <p><span class="font-medium">{{ r.title }}</span> <span class="text-xs text-slate-500">{{ r.kind }} · {{ r.rule }}</span></p>
+      <p class="text-sm {{ 'font-semibold text-amber-800' if r.overdue else 'text-slate-600' }}">
+        {% if not r.active %}Off
+        {% elif r.snoozed %}Snoozed until {{ r.snoozed.strftime("%d %b %H:%M") }}
+        {% elif r.due %}{{ "Due" if r.overdue else "Next" }} {{ r.due.strftime("%d %b %H:%M") }}
+        {% else %}Waiting for an event{% endif %}
+      </p>
+    </div>
+    <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+      {% if r.active %}
+      <form method="post" action="/reminders/{{ r.id }}/done"><button class="rounded bg-teal-700 px-3 py-1 text-white">Done</button></form>
+      <form method="post" action="/reminders/{{ r.id }}/snooze" class="flex items-center gap-1">
+        <select name="minutes" class="rounded border border-slate-300 px-1 py-1" aria-label="Snooze for">
+          {% for minutes, label in snooze_choices.items() %}<option value="{{ minutes }}">{{ label }}</option>{% endfor %}
+        </select>
+        <button class="rounded border border-slate-300 px-3 py-1">Snooze</button>
+      </form>
+      <form method="post" action="/reminders/{{ r.id }}/off"><button class="rounded border border-slate-300 px-3 py-1">Switch off</button></form>
+      {% else %}
+      <form method="post" action="/reminders/{{ r.id }}/on"><button class="rounded border border-teal-700 px-3 py-1 text-teal-800">Switch on</button></form>
+      {% endif %}
+      {% if r.custom %}
+      <form method="post" action="/reminders/{{ r.id }}/delete"><button class="rounded border border-red-300 px-3 py-1 text-red-800">Delete</button></form>
+      {% endif %}
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+
+<h2 class="mb-2 font-medium">Quiet hours</h2>
+<form method="post" action="/reminders/quiet-hours" class="mb-6 space-y-3 rounded border border-slate-200 bg-white p-4">
+  <p class="text-sm text-slate-600">Reminders due in this window wait until it ends. The recheck after a low is never held back. Leave both empty for no quiet hours.</p>
+  <div class="grid grid-cols-2 gap-3">
+    {{ field("From", "quiet_start", quiet_start, "time") }}
+    {{ field("Until", "quiet_end", quiet_end, "time") }}
+  </div>
+  {{ button("Save quiet hours") }}
+</form>
+
+<h2 class="mb-2 font-medium">Add your own reminder</h2>
+<form method="post" action="/reminders" class="mb-6 space-y-3 rounded border border-slate-200 bg-white p-4">
+  {{ field("Name", "title", "", "text", 'maxlength="100" required') }}
+  <label class="block">
+    <span class="text-sm font-medium">How often</span>
+    <select name="rule_type" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2">
+      {% for value, label in rule_labels.items() %}<option value="{{ value.value }}">{{ label }}</option>{% endfor %}
+    </select>
+  </label>
+  <div class="grid grid-cols-2 gap-3">
+    {{ field("Every how many days", "interval_days", "", "number", 'min="1" max="365"', "For every N days") }}
+    {{ field("Time of day", "time_of_day", "", "time", "", "For every day at a time") }}
+  </div>
+  {{ button("Add reminder") }}
+</form>
+
+{% include "_push.html" %}
+{% endblock %}

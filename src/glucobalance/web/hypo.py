@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from glucobalance.entries import EntryError, PossibleDuplicate
 from glucobalance.hypo_service import RECHECK_MINUTES, log_hypo, recent_hypos
 from glucobalance.models import HypoTreatmentKind, User, UserSettings
+from glucobalance.reminder_service import schedule_hypo_recheck
 from glucobalance.units import format_glucose
 from glucobalance.web.deps import CurrentUser, DbSession, Templates
 from glucobalance.web.log_forms import local_input_value, parse_hypo_form
@@ -114,6 +115,7 @@ async def save_hypo(
             ask_confirm=isinstance(error, PossibleDuplicate),
             status_code=422,
         )
+    schedule_hypo_recheck(db, user, event_at=saved.treated_at, now=_now())
     db.commit()
     label = TREATMENT_LABELS[saved.treatment].lower()
     if saved.treatment is HypoTreatmentKind.GLUCAGON:

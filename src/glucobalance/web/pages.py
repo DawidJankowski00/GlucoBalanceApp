@@ -1,10 +1,13 @@
 """The home page, the settings page and the settings history."""
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from glucobalance.features import FeatureFlags, SiteRotationUnit, feature_flags
 from glucobalance.models import ChangeSource, DisplayUnit
+from glucobalance.reminder_service import ensure_default_reminders
 from glucobalance.settings_service import SettingsError, apply_settings, history, to_input
 from glucobalance.web.deps import CurrentUser, DbSession, Templates
 from glucobalance.web.forms import BLOCK_ROWS, parse_settings, settings_to_form
@@ -88,6 +91,7 @@ async def save_settings(
     try:
         data = parse_settings(form)
         apply_settings(db, user, data, ChangeSource.USER, user)
+        ensure_default_reminders(db, user, now=datetime.now(UTC))
     except SettingsError as error:
         db.rollback()
         return _settings_page(request, templates, user, form, error=str(error), status_code=422)
