@@ -8,7 +8,7 @@ It is also a portfolio project: it is meant to show backend engineering, AI engi
 
 ## Project status
 
-**Early development. Stages 0 to 2 are built and Stage 3 is in progress:** project tooling, Docker and CI; the database layer (models, migrations, repositories, a simulated seed script); and accounts with an onboarding wizard, feature flags derived from the pump/pens and glucometer/CGM choices, a settings page with a full change history, and a PWA manifest. Stage 3 has started with a quick glucose entry page that checks each reading. There are no charts, site rotation, reminders, CGM import or AI assistant yet. The sections below describe what is planned. Development happens in small stages (see [Roadmap](#roadmap)), and this README is updated as each one lands.
+**Early development. Stages 0 to 2 are built and Stage 3 is in progress:** project tooling, Docker and CI; the database layer (models, migrations, repositories, a simulated seed script); and accounts with an onboarding wizard, feature flags derived from the pump/pens and glucometer/CGM choices, a settings page with a full change history, and a PWA manifest. Stage 3 has started: quick glucose, insulin and carb entry with checks on each entry, and a Today timeline. There are no charts, site rotation, reminders, CGM import or AI assistant yet. The sections below describe what is planned. Development happens in small stages (see [Roadmap](#roadmap)), and this README is updated as each one lands.
 
 ## Planned features
 

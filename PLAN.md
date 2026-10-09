@@ -52,8 +52,12 @@ The owner wants to build the app in segments and fully understand every one. Fol
 | `src/glucobalance/templates/`, `static/` | Jinja2 templates (Tailwind via CDN, HTMX) and the PWA manifest and icons. |
 | `tests/test_features.py`, `test_accounts.py`, `test_settings_service.py`, `test_web.py` | Stage 2 tests. |
 | `src/glucobalance/glucose_service.py` | Manual glucose readings: range, time and duplicate checks, `log_reading()`, tag suggestion, `is_low()`. |
-| `src/glucobalance/web/log.py`, `web/log_forms.py` | The `/log/glucose` page; form parsing from the user's unit and local time to mg/dL and UTC. |
-| `tests/test_glucose_service.py`, `test_log_forms.py`, `test_web_glucose.py` | Stage 3 tests (glucose entry). |
+| `src/glucobalance/web/log.py`, `web/log_forms.py` | The `/log/glucose`, `/log/insulin` and `/log/carbs` pages; form parsing from the user's unit and local time to mg/dL and UTC. |
+| `src/glucobalance/entries.py` | Rules shared by every logged entry: `EntryError`, `PossibleDuplicate` (saved only when the user confirms) and the time check. |
+| `src/glucobalance/treatment_service.py` | Logging insulin doses (dose step, max bolus, basal cap) and carbs (1 to 300 g). Records only; never suggests a dose. |
+| `src/glucobalance/timeline.py` | `build_timeline()` merges a day's entries; `day_bounds()` turns a local day into UTC (23 or 25 hours on clock-change days). |
+| `src/glucobalance/web/today.py` | The `/today` page: one local day of entries with previous and next day links. |
+| `tests/test_glucose_service.py`, `test_log_forms.py`, `test_web_glucose.py`, `test_treatment_service.py`, `test_timeline.py`, `test_web_entries.py` | Stage 3 tests. |
 | `.pre-commit-config.yaml` | Local hooks (ruff check --fix, ruff format, mypy) run through `uv run`, so they use `.venv` and the versions in `uv.lock`. |
 
 **Already done:**
@@ -62,7 +66,7 @@ The owner wants to build the app in segments and fully understand every one. Fol
 - README and `.gitignore`.
 - Python tooling: uv, ruff (lint + format), mypy strict and pytest are configured and all run clean; pre-commit runs ruff and mypy on every commit.
 
-**Not done yet** (still planned): the rest of Stage 3 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. There are no insulin or carb forms, charts, reminders or AI code yet.
+**Not done yet** (still planned): the rest of Stage 3 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms and a Today timeline followed. There are no charts, reminders or AI code yet.
 
 Python is pinned to 3.12 with `.python-version` (ADR 0003), matching CI and Docker; simglucose does not work on 3.14.
 
@@ -231,7 +235,7 @@ Done when manual readings are quick to enter and show on a daily chart.
 - [x] Validation (plausible range, future timestamps, duplicates)
 - [ ] Daily and weekly chart with target band
 - [ ] Logbook table with filters and CSV export
-- [ ] Insulin and carb entry forms, shown on the same timeline
+- [x] Insulin and carb entry forms, shown on the same timeline
 - [ ] Carb logging with food search (Open Food Facts), favourite meals
 - [ ] Hypo log with treatment taken
 
