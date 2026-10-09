@@ -1,0 +1,8 @@
+{
+  "status": 4,
+  "data": {
+    "step": {"type": "tou", "componentName": "AcceptDocument", "props": {"reaccept": true, "titleKey": "Common.termsOfUse", "type": "tou"}},
+    "user": {"accountType": "pat", "country": "PL", "uiLanguage": "pl-PL"},
+    "authTicket": {"token": "fake-step-token", "expires": 1760030000, "duration": 3600000}
+  }
+}
