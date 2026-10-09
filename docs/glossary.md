@@ -18,6 +18,9 @@ Plain-language definitions of the diabetes terms used in GlucoBalanceApp. This i
 - **Target:** the glucose value a correction aims for.
 - **Insulin action time:** how long a bolus keeps working (typically 3-5 hours); used by the IOB model.
 - **Hypo / hyper:** glucose that is too low (below 70 mg/dL) or too high.
+- **Hypo treatment:** fast-acting carbohydrate taken for a hypo, commonly 15 g (glucose tablets or juice), with a recheck after 15 minutes. Each person's plan comes from their diabetes team.
+- **Fingerstick:** a glucose reading from a meter and a drop of blood from the fingertip. CGM users take one to confirm a reading that looks wrong.
+- **Reading tag:** a label on a meter reading that says when it was taken: fasting, before meal, after meal, bedtime or night. Statistics per time of day use it.
 
 ## The bolus formula used in GBA
 

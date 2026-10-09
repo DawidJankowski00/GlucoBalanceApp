@@ -51,6 +51,9 @@ The owner wants to build the app in segments and fully understand every one. Fol
 | `src/glucobalance/web/` | Routes and helpers: login, onboarding wizard, home, settings page and history, form parsing. |
 | `src/glucobalance/templates/`, `static/` | Jinja2 templates (Tailwind via CDN, HTMX) and the PWA manifest and icons. |
 | `tests/test_features.py`, `test_accounts.py`, `test_settings_service.py`, `test_web.py` | Stage 2 tests. |
+| `src/glucobalance/glucose_service.py` | Manual glucose readings: range, time and duplicate checks, `log_reading()`, tag suggestion, `is_low()`. |
+| `src/glucobalance/web/log.py`, `web/log_forms.py` | The `/log/glucose` page; form parsing from the user's unit and local time to mg/dL and UTC. |
+| `tests/test_glucose_service.py`, `test_log_forms.py`, `test_web_glucose.py` | Stage 3 tests (glucose entry). |
 | `.pre-commit-config.yaml` | Local hooks (ruff check --fix, ruff format, mypy) run through `uv run`, so they use `.venv` and the versions in `uv.lock`. |
 
 **Already done:**
@@ -59,7 +62,7 @@ The owner wants to build the app in segments and fully understand every one. Fol
 - README and `.gitignore`.
 - Python tooling: uv, ruff (lint + format), mypy strict and pytest are configured and all run clean; pre-commit runs ruff and mypy on every commit.
 
-**Not done yet** (still planned): Stage 3 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. There is no logging UI, reminders or AI code yet.
+**Not done yet** (still planned): the rest of Stage 3 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. There are no insulin or carb forms, charts, reminders or AI code yet.
 
 Python is pinned to 3.12 with `.python-version` (ADR 0003), matching CI and Docker; simglucose does not work on 3.14.
 
@@ -109,7 +112,7 @@ A Python web app (installable on a phone as a PWA) that logs glucose and insulin
 | Quality | pytest, hypothesis, ruff, mypy, pre-commit |
 | CI / packaging | GitHub Actions, Docker Compose |
 
-Installed so far: ruff, mypy, pytest, pre-commit, FastAPI, uvicorn, pydantic-settings, SQLAlchemy, Alembic, psycopg, argon2-cffi, Jinja2, python-multipart, itsdangerous, httpx (dev, for tests) and simglucose (optional `sim` group). Add the others in the stage that first needs them, and explain each one when it is introduced.
+Installed so far: ruff, mypy, pytest, pre-commit, FastAPI, uvicorn, pydantic-settings, SQLAlchemy, Alembic, psycopg, argon2-cffi, Jinja2, python-multipart, itsdangerous, tzdata (time zone data for Windows), httpx (dev, for tests) and simglucose (optional `sim` group). Add the others in the stage that first needs them, and explain each one when it is introduced.
 
 ### Architecture
 
@@ -210,7 +213,7 @@ Done when every core entity can be saved, read and migrated.
 - [x] Seed script that generates 30 days of simulated data with simglucose
 - [x] Unit tests for models and conversions
 
-### Stage 2: Accounts, onboarding and settings (done, pending owner approval)
+### Stage 2: Accounts, onboarding and settings (done)
 
 Done when a new user picks pump or pens and glucometer or CGM, and the app changes accordingly.
 
@@ -224,8 +227,8 @@ Done when a new user picks pump or pens and glucometer or CGM, and the app chang
 
 Done when manual readings are quick to enter and show on a daily chart.
 
-- [ ] Manual entry form with tag and optional note, under 5 seconds to log
-- [ ] Validation (plausible range, future timestamps, duplicates)
+- [x] Manual entry form with tag and optional note, under 5 seconds to log
+- [x] Validation (plausible range, future timestamps, duplicates)
 - [ ] Daily and weekly chart with target band
 - [ ] Logbook table with filters and CSV export
 - [ ] Insulin and carb entry forms, shown on the same timeline
