@@ -44,7 +44,7 @@ The owner wants to build the app in segments and fully understand every one. Fol
 - README and `.gitignore`.
 - Python tooling: uv, ruff (lint + format), mypy strict and pytest are configured and all run clean; pre-commit runs ruff and mypy on every commit.
 
-**Not done yet** (still planned): everything else, including the rest of Stage 0 (Docker Compose, CI, CLAUDE.md, ADR folder, glossary). There is a bare FastAPI app with a health endpoint, but no database, UI or AI code yet.
+**Not done yet** (still planned): Stage 1 onwards. Stage 0 files now also exist: `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. There is a bare FastAPI app with a health endpoint, but no database, UI or AI code yet.
 
 Note: the local machine runs Python 3.14; the project requires 3.12 or newer and the plan targets 3.12. Pinning one version is an open, one-line decision.
 
@@ -171,7 +171,7 @@ At onboarding the user picks two options. They are stored as user settings and t
 
 Twelve stages, each ending in something that can be demonstrated. Stages 0 to 6 make a usable app, 7 to 9 add the AI, 10 and 11 are polish and extras. Tick tasks only when they are done and approved by the owner.
 
-### Stage 0: Foundations (in progress)
+### Stage 0: Foundations (done, pending owner approval)
 
 Done when an empty app runs locally, in Docker and in CI.
 
@@ -180,10 +180,10 @@ Done when an empty app runs locally, in Docker and in CI.
 - [x] Set up uv, ruff, mypy (strict) and pytest
 - [x] Set up pre-commit (ruff and mypy hooks)
 - [x] FastAPI skeleton with a health endpoint and settings loaded from environment variables
-- [ ] Docker Compose with the app and PostgreSQL
-- [ ] GitHub Actions: lint, type-check and tests on every pull request
-- [ ] Write CLAUDE.md (conventions, pointer to this plan, "explain before coding" rule) and a `docs/adr/` folder for decisions
-- [ ] Domain glossary: ICR, ISF, IOB, TIR, basal, bolus, CGM, AGP
+- [x] Docker Compose with the app and PostgreSQL
+- [x] GitHub Actions: lint, type-check and tests on every pull request
+- [x] Write CLAUDE.md (conventions, pointer to this plan, "explain before coding" rule) and a `docs/adr/` folder for decisions
+- [x] Domain glossary: ICR, ISF, IOB, TIR, basal, bolus, CGM, AGP
 
 ### Stage 1: Domain model and data layer
 
