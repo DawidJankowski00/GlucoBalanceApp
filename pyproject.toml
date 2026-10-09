@@ -4,7 +4,13 @@ version = "0.1.0"
 description = "GlucoBalanceApp: a companion app for people with Type 1 diabetes."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = [
+    "fastapi>=0.143.0",
+    "pydantic-settings>=2.15.0",
+    "uvicorn>=0.54.0",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -38,6 +44,7 @@ addopts = ["-ra", "--strict-markers", "--strict-config"]
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.1",
     "mypy>=2.4.0",
     "pytest>=9.1.1",
     "ruff>=0.16.10",
