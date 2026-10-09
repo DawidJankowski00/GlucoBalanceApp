@@ -82,6 +82,15 @@ class GlucoseRepository(Repository[GlucoseReading]):
             .limit(1)
         ).first()
 
+    def recent(self, user_id: int, limit: int) -> Sequence[GlucoseReading]:
+        """The newest ``limit`` readings, newest first."""
+        return self.session.scalars(
+            select(GlucoseReading)
+            .where(GlucoseReading.user_id == user_id)
+            .order_by(GlucoseReading.measured_at.desc())
+            .limit(limit)
+        ).all()
+
     def add_new(self, readings: Iterable[GlucoseReading]) -> int:
         """Add readings not stored yet (same user, source and time); return how many were added.
 
