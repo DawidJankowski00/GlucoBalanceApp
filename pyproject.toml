@@ -38,7 +38,7 @@ select = [
 # ---------- mypy: type checking ----------
 [tool.mypy]
 strict = true
-files = ["src", "tests"]
+files = ["src", "tests", "migrations"]
 
 # ---------- pytest ----------
 [tool.pytest.ini_options]

@@ -23,6 +23,8 @@ uv run ruff format       # format
 uv run mypy              # type check (strict)
 uv run pytest            # tests
 uv run uvicorn glucobalance.main:app --reload   # run the app
+uv run alembic upgrade head                     # apply database migrations
+uv run alembic revision --autogenerate -m "..." # draft a migration from model changes
 docker compose up --build                       # app + PostgreSQL
 ```
 
