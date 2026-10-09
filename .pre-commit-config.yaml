@@ -1,0 +1,31 @@
+# pre-commit runs these hooks on staged files before every `git commit`.
+# Turn it on once per clone with:  uv run pre-commit install
+# Run it by hand on everything:     uv run pre-commit run --all-files
+#
+# All hooks are "local" and go through `uv run`, so they use the project's own
+# .venv and the tool versions pinned in uv.lock. That way mypy can see the
+# installed libraries (FastAPI, pydantic, ...) and nothing is pinned twice.
+
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check (lint, auto-fix)
+        entry: uv run ruff check --fix
+        language: system
+        types_or: [python, pyi]
+
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types_or: [python, pyi]
+
+      - id: mypy
+        name: mypy (strict)
+        # Check the whole project (the `files` setting in pyproject.toml),
+        # not just the staged files, so strict mode sees every module.
+        entry: uv run mypy
+        language: system
+        types_or: [python, pyi]
+        pass_filenames: false

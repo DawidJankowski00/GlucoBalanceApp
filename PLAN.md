@@ -27,7 +27,7 @@ The owner wants to build the app in segments and fully understand every one. Fol
 |---|---|
 | `README.md` | Project description, planned features, roadmap, disclaimer. Describes the plan, not working features. |
 | `.gitignore` | Python, virtualenv, tool caches, secrets. |
-| `pyproject.toml` | Project metadata (`glucobalance`, Python >= 3.12, hatchling build) plus all tool config: ruff, mypy (strict), pytest. Dev dependency group: ruff, mypy, pytest. |
+| `pyproject.toml` | Project metadata (`glucobalance`, Python >= 3.12, hatchling build) plus all tool config: ruff, mypy (strict), pytest. Dev dependency group: ruff, mypy, pytest, httpx, pre-commit. |
 | `uv.lock` | Pinned dependency versions. Commit it. |
 | `src/glucobalance/__init__.py` | The only code so far: `MGDL_PER_MMOLL = 18.0` and `mgdl_to_mmoll()`. |
 | `src/glucobalance/py.typed` | Marks the package as typed. |
@@ -36,14 +36,15 @@ The owner wants to build the app in segments and fully understand every one. Fol
 | `src/glucobalance/main.py` | `create_app()` factory, `app`, and `GET /health`. Run with `uv run uvicorn glucobalance.main:app --reload`. |
 | `.env.example` | Documented variables with placeholder values; copy to `.env`. |
 | `tests/test_config.py`, `tests/test_health.py` | Tests for settings loading and the health endpoint. |
+| `.pre-commit-config.yaml` | Local hooks (ruff check --fix, ruff format, mypy) run through `uv run`, so they use `.venv` and the versions in `uv.lock`. |
 
 **Already done:**
 
 - The project plan (12 stages, below).
 - README and `.gitignore`.
-- Python tooling: uv, ruff (lint + format), mypy strict and pytest are configured and all run clean.
+- Python tooling: uv, ruff (lint + format), mypy strict and pytest are configured and all run clean; pre-commit runs ruff and mypy on every commit.
 
-**Not done yet** (still planned): everything else, including the rest of Stage 0 (pre-commit, Docker Compose, CI, CLAUDE.md, ADR folder, glossary). There is a bare FastAPI app with a health endpoint, but no database, UI or AI code yet.
+**Not done yet** (still planned): everything else, including the rest of Stage 0 (Docker Compose, CI, CLAUDE.md, ADR folder, glossary). There is a bare FastAPI app with a health endpoint, but no database, UI or AI code yet.
 
 Note: the local machine runs Python 3.14; the project requires 3.12 or newer and the plan targets 3.12. Pinning one version is an open, one-line decision.
 
@@ -57,6 +58,8 @@ uv run ruff check        # lint
 uv run ruff format       # format
 uv run mypy              # type check (strict, covers src/ and tests/)
 uv run pytest            # run tests
+uv run pre-commit install           # once per clone: run the hooks on every commit
+uv run pre-commit run --all-files   # run the hooks by hand on every file
 uv add <package>         # add a runtime dependency
 uv add --dev <package>   # add a dev dependency
 ```
@@ -91,7 +94,7 @@ A Python web app (installable on a phone as a PWA) that logs glucose and insulin
 | Quality | pytest, hypothesis, ruff, mypy, pre-commit |
 | CI / packaging | GitHub Actions, Docker Compose |
 
-Installed so far: ruff, mypy, pytest, FastAPI, uvicorn, pydantic-settings and httpx (dev, for tests). Add the others in the stage that first needs them, and explain each one when it is introduced.
+Installed so far: ruff, mypy, pytest, pre-commit, FastAPI, uvicorn, pydantic-settings and httpx (dev, for tests). Add the others in the stage that first needs them, and explain each one when it is introduced.
 
 ### Architecture
 
@@ -175,7 +178,7 @@ Done when an empty app runs locally, in Docker and in CI.
 - [x] GitHub repo with a README (goal, disclaimer, roadmap)
 - [x] Add an MIT `LICENSE` file
 - [x] Set up uv, ruff, mypy (strict) and pytest
-- [ ] Set up pre-commit (ruff and mypy hooks)
+- [x] Set up pre-commit (ruff and mypy hooks)
 - [x] FastAPI skeleton with a health endpoint and settings loaded from environment variables
 - [ ] Docker Compose with the app and PostgreSQL
 - [ ] GitHub Actions: lint, type-check and tests on every pull request
