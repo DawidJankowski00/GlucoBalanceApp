@@ -29,9 +29,18 @@ The owner wants to build the app in segments and fully understand every one. Fol
 | `.gitignore` | Python, virtualenv, tool caches, secrets. |
 | `pyproject.toml` | Project metadata (`glucobalance`, Python >= 3.12, hatchling build) plus all tool config: ruff, mypy (strict), pytest. Dev dependency group: ruff, mypy, pytest, httpx, pre-commit. |
 | `uv.lock` | Pinned dependency versions. Commit it. |
-| `src/glucobalance/__init__.py` | The only code so far: `MGDL_PER_MMOLL = 18.0` and `mgdl_to_mmoll()`. |
+| `src/glucobalance/__init__.py` | Re-exports `MGDL_PER_MMOLL` and `mgdl_to_mmoll()` from `units.py`. |
+| `src/glucobalance/units.py` | `DisplayUnit`, `mgdl_to_mmoll()`, `mmoll_to_mgdl()`, `format_glucose()`. |
+| `src/glucobalance/db.py` | SQLAlchemy `Base` (with constraint naming convention), `make_engine()`, `make_session_factory()`, `get_session()`. |
+| `src/glucobalance/models/` | ORM models: User, UserSettings, SettingsTimeBlock, GlucoseReading, InsulinDose, CarbEntry, BodySite, SiteUse, Reminder, Note; `UTCDateTime` and `str_enum` column types. |
+| `src/glucobalance/repositories.py` | One repository per aggregate; flush, never commit. |
+| `src/glucobalance/seed.py` | Simulated pump + CGM demo user from simglucose (`uv run --group sim python -m glucobalance.seed`). |
+| `alembic.ini`, `migrations/` | Alembic config and migrations; the Docker image runs `alembic upgrade head` on start. |
+| `.python-version` | Pins Python 3.12 (ADR 0003). |
 | `src/glucobalance/py.typed` | Marks the package as typed. |
-| `tests/test_units.py` | Parametrised test for `mgdl_to_mmoll()` (3 cases, passing). |
+| `tests/test_units.py` | Unit conversion and display formatting tests. |
+| `tests/conftest.py` | Fresh in-memory SQLite database and session for every test. |
+| `tests/test_db.py`, `test_models.py`, `test_migrations.py`, `test_repositories.py`, `test_seed.py` | Data layer tests (Stage 1). |
 | `src/glucobalance/config.py` | `Settings` (pydantic-settings, `GBA_` env prefix, optional `.env`) and cached `get_settings()`. |
 | `src/glucobalance/main.py` | `create_app()` factory, `app`, and `GET /health`. Run with `uv run uvicorn glucobalance.main:app --reload`. |
 | `.env.example` | Documented variables with placeholder values; copy to `.env`. |
@@ -44,9 +53,9 @@ The owner wants to build the app in segments and fully understand every one. Fol
 - README and `.gitignore`.
 - Python tooling: uv, ruff (lint + format), mypy strict and pytest are configured and all run clean; pre-commit runs ruff and mypy on every commit.
 
-**Not done yet** (still planned): Stage 1 onwards. Stage 0 files now also exist: `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. There is a bare FastAPI app with a health endpoint, but no database, UI or AI code yet.
+**Not done yet** (still planned): Stage 2 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. There are no accounts, UI or AI code yet.
 
-Note: the local machine runs Python 3.14; the project requires 3.12 or newer and the plan targets 3.12. Pinning one version is an open, one-line decision.
+Python is pinned to 3.12 with `.python-version` (ADR 0003), matching CI and Docker; simglucose does not work on 3.14.
 
 ## Tooling and commands
 
@@ -94,7 +103,7 @@ A Python web app (installable on a phone as a PWA) that logs glucose and insulin
 | Quality | pytest, hypothesis, ruff, mypy, pre-commit |
 | CI / packaging | GitHub Actions, Docker Compose |
 
-Installed so far: ruff, mypy, pytest, pre-commit, FastAPI, uvicorn, pydantic-settings and httpx (dev, for tests). Add the others in the stage that first needs them, and explain each one when it is introduced.
+Installed so far: ruff, mypy, pytest, pre-commit, FastAPI, uvicorn, pydantic-settings, SQLAlchemy, Alembic, psycopg, httpx (dev, for tests) and simglucose (optional `sim` group). Add the others in the stage that first needs them, and explain each one when it is introduced.
 
 ### Architecture
 
@@ -171,7 +180,7 @@ At onboarding the user picks two options. They are stored as user settings and t
 
 Twelve stages, each ending in something that can be demonstrated. Stages 0 to 6 make a usable app, 7 to 9 add the AI, 10 and 11 are polish and extras. Tick tasks only when they are done and approved by the owner.
 
-### Stage 0: Foundations (done, pending owner approval)
+### Stage 0: Foundations (done)
 
 Done when an empty app runs locally, in Docker and in CI.
 
@@ -185,15 +194,15 @@ Done when an empty app runs locally, in Docker and in CI.
 - [x] Write CLAUDE.md (conventions, pointer to this plan, "explain before coding" rule) and a `docs/adr/` folder for decisions
 - [x] Domain glossary: ICR, ISF, IOB, TIR, basal, bolus, CGM, AGP
 
-### Stage 1: Domain model and data layer
+### Stage 1: Domain model and data layer (done, pending owner approval)
 
 Done when every core entity can be saved, read and migrated.
 
-- [ ] Models: User, Settings, GlucoseReading, InsulinDose, CarbEntry, BodySite, SiteUse, Reminder, Note
-- [ ] Store all glucose internally in mg/dL; convert only for display
-- [ ] Alembic migrations and a repository layer
-- [ ] Seed script that generates 30 days of simulated data with simglucose
-- [ ] Unit tests for models and conversions
+- [x] Models: User, Settings, GlucoseReading, InsulinDose, CarbEntry, BodySite, SiteUse, Reminder, Note
+- [x] Store all glucose internally in mg/dL; convert only for display
+- [x] Alembic migrations and a repository layer
+- [x] Seed script that generates 30 days of simulated data with simglucose
+- [x] Unit tests for models and conversions
 
 ### Stage 2: Accounts, onboarding and settings
 

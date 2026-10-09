@@ -13,8 +13,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Then add the source and install the project itself
 COPY src ./src
+COPY alembic.ini ./
+COPY migrations ./migrations
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
 
 EXPOSE 8000
-CMD ["uvicorn", "glucobalance.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Bring the database schema up to date, then start the app
+CMD ["sh", "-c", "alembic upgrade head && uvicorn glucobalance.main:app --host 0.0.0.0 --port 8000"]

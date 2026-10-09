@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     app_name: str = "GlucoBalanceApp"
     environment: Literal["development", "test", "production"] = "development"
     debug: bool = False
-    database_url: str = "postgresql://glucobalance:change-me@localhost:5432/glucobalance"
+    database_url: str = "postgresql+psycopg://glucobalance:change-me@localhost:5432/glucobalance"
 
 
 @lru_cache

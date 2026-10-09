@@ -20,7 +20,6 @@ pip-wheel-metadata/
 venv/
 env/
 ENV/
-.python-version
 
 # Testing, coverage and type checking
 .pytest_cache/

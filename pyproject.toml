@@ -7,8 +7,11 @@ requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE"]
 dependencies = [
+    "alembic>=1.20.0",
     "fastapi>=0.143.0",
+    "psycopg[binary]>=3.3.6",
     "pydantic-settings>=2.15.0",
+    "sqlalchemy>=2.1.4",
     "uvicorn>=0.54.0",
 ]
 
@@ -35,7 +38,7 @@ select = [
 # ---------- mypy: type checking ----------
 [tool.mypy]
 strict = true
-files = ["src", "tests"]
+files = ["src", "tests", "migrations"]
 
 # ---------- pytest ----------
 [tool.pytest.ini_options]
@@ -50,3 +53,12 @@ dev = [
     "pytest>=9.1.1",
     "ruff>=0.16.10",
 ]
+sim = [
+    "setuptools<70",
+    "simglucose>=0.2.11",
+]
+
+# simglucose and pandas (optional "sim" group) ship no type information
+[[tool.mypy.overrides]]
+module = ["simglucose.*", "pandas.*"]
+ignore_missing_imports = true
