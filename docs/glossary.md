@@ -1,0 +1,24 @@
+# Glossary
+
+Plain-language definitions of the diabetes terms used in GlucoBalanceApp. This is not medical advice; settings should be agreed with a diabetes team.
+
+| Term | Meaning |
+|---|---|
+| **Basal** | Background insulin that covers the body's needs between meals and overnight. Pumps deliver it continuously (rapid-acting insulin); pen users take a daily long-acting dose. |
+| **Bolus** | A dose of rapid-acting insulin taken for food (meal bolus) or to bring a high glucose down (correction bolus). |
+| **ICR** | Insulin-to-carb ratio: grams of carbohydrate covered by 1 unit of insulin (for example 1:10). Often differs by time of day. |
+| **ISF** | Insulin sensitivity factor (also called correction factor): how much 1 unit of insulin lowers glucose, in mg/dL (or mmol/L). |
+| **IOB** | Insulin on board: rapid-acting insulin already given that is still working. It is subtracted from a new bolus to avoid stacking doses. It depends on the insulin action time. |
+| **CGM** | Continuous glucose monitor: a sensor worn on the body that reports glucose every few minutes, with a trend arrow. |
+| **TIR** | Time in range: the percentage of readings within the target range (commonly 70-180 mg/dL, 3.9-10.0 mmol/L). Time below and above range are tracked alongside it. |
+| **AGP** | Ambulatory glucose profile: a standard chart that overlays many days of glucose onto one typical 24-hour day, showing median and percentile bands. |
+
+## Related terms
+
+- **Target:** the glucose value a correction aims for.
+- **Insulin action time:** how long a bolus keeps working (typically 3-5 hours); used by the IOB model.
+- **Hypo / hyper:** glucose that is too low (below 70 mg/dL) or too high.
+
+## The bolus formula used in GBA
+
+`carbs / ICR + (current glucose - target) / ISF - IOB`, rounded to the pen or pump step and never negative. Computed by plain, tested Python, never by the LLM.
