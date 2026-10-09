@@ -29,6 +29,11 @@
     {{ field("Time zone", "timezone", values.timezone, "text", 'required list="timezones" autocomplete="off"', "Used for \"today\" and times on the log, for example Europe/Warsaw.") }}
     <datalist id="timezones"><option value="" data-browser-timezone></option></datalist>
   </fieldset>
+  <fieldset class="space-y-3">
+    <legend class="mb-2 font-medium">Site rotation</legend>
+    {{ field("Rest period (days)", "site_rest_days", values.site_rest_days, "number", 'min="3" max="60" required', "A site rests this long before it is suggested again.") }}
+    {{ field("Infusion set change (days)", "set_change_days", values.set_change_days, "number", 'min="1" max="7" required', "Pump only: how often you change the infusion set.") }}
+  </fieldset>
   <fieldset>
     <legend class="mb-2 font-medium">Carb ratio and sensitivity by time of day</legend>
     {{ block_rows(values, rows, values.display_unit) }}

@@ -24,6 +24,10 @@ Plain-language definitions of the diabetes terms used in GlucoBalanceApp. This i
 - **Reading tag:** a label on a meter reading that says when it was taken: fasting, before meal, after meal, bedtime or night. Statistics per time of day use it.
 - **Favourite meal:** a named amount of carbs saved for one-tap logging. It records grams only; the dose is always a separate decision.
 - **Open Food Facts:** a free, crowd-sourced food database used for the carb search. Its values can be wrong, so the number is always checked before saving.
+- **Site rotation:** moving each infusion set or injection to a different spot so the skin and fat underneath can recover. Using one spot too often causes lumps (lipohypertrophy) where insulin is absorbed unevenly.
+- **Rest period:** how many days a site should rest before it is suggested again (default 14). A site still resting can be used, but only after every rested site.
+- **Blocked site:** a site marked not available, for a while (bruise, sport) or until removed (lump, scar, tattoo). It is never suggested.
+- **Property-based test:** a test that states a rule for every input (for example "a blocked site is never suggested") and lets Hypothesis generate hundreds of random inputs to try to break it.
 
 ## The bolus formula used in GBA
 

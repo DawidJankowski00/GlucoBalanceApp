@@ -201,3 +201,27 @@ def test_health_and_manifest_are_public(client: TestClient) -> None:
     assert manifest.status_code == 200
     assert manifest.json()["display"] == "standalone"
     assert client.get("/static/icon-192.png").headers["content-type"] == "image/png"
+
+
+def test_settings_page_edits_site_rotation(client: TestClient, engine: Engine) -> None:
+    sign_up(client)
+    onboard(client)
+    page = client.get("/settings").text
+    assert 'name="site_rest_days" value="14"' in page
+    assert 'name="set_change_days" value="3"' in page
+
+    form = {**STEP1, **STEP2, **STEP3, "site_rest_days": "10", "set_change_days": "2"}
+    assert client.post("/settings", data=form).status_code == 200
+
+    session, user = saved_user(engine)
+    with session:
+        assert user.settings is not None
+        assert (user.settings.site_rest_days, user.settings.set_change_days) == (10, 2)
+
+
+def test_a_bad_rest_period_is_explained(client: TestClient) -> None:
+    sign_up(client)
+    onboard(client)
+    response = client.post("/settings", data={**STEP1, **STEP2, **STEP3, "site_rest_days": "x"})
+    assert response.status_code == 422
+    assert "rest period" in response.text

@@ -34,6 +34,16 @@ def _decimal(raw: str, label: str) -> Decimal:
     return value
 
 
+def _whole_days(raw: str | None, default: int, label: str) -> int:
+    """Whole days from a form field; a missing field (onboarding) keeps the default."""
+    if raw is None:
+        return default
+    value = _decimal(raw, label)
+    if value != value.to_integral_value():
+        raise SettingsError(f"Enter whole days for {label}.")
+    return int(value)
+
+
 def _glucose_mgdl(raw: str, unit: DisplayUnit, label: str) -> int:
     value = _decimal(raw, label)
     return round(value) if unit is DisplayUnit.MGDL else mmoll_to_mgdl(float(value))
@@ -93,6 +103,8 @@ def parse_settings(form: Mapping[str, str], *, require_blocks: bool = True) -> S
         clinician_contact=form.get("clinician_contact", "").strip() or None,
         time_blocks=blocks,
         timezone=form.get("timezone", "").strip() or "UTC",
+        site_rest_days=_whole_days(form.get("site_rest_days"), 14, "the site rest period"),
+        set_change_days=_whole_days(form.get("set_change_days"), 3, "the set change interval"),
     )
     validate(data)
     return data
@@ -117,6 +129,8 @@ def settings_to_form(data: SettingsInput) -> dict[str, str]:
         "dose_step_units": format(data.dose_step_units.normalize(), "f"),
         "clinician_contact": data.clinician_contact or "",
         "timezone": data.timezone,
+        "site_rest_days": str(data.site_rest_days),
+        "set_change_days": str(data.set_change_days),
     }
     for row, block in enumerate(data.time_blocks[:BLOCK_ROWS]):
         form[f"block_start_{row}"] = f"{block.start_time:%H:%M}"
