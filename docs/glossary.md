@@ -35,6 +35,13 @@ Plain-language definitions of the diabetes terms used in GlucoBalanceApp. This i
 - **Web Push:** the standard way for a website to send a notification to a phone through the browser's push service, even when the site is closed.
 - **VAPID keys:** a public and private key pair that proves to the push service that the messages come from this server. Only the public key is shared.
 - **Service worker:** a small script the browser keeps running in the background for a site. Ours only shows push notifications.
+- **LibreLinkUp:** Abbott's app for family members who follow someone's FreeStyle Libre readings. GBA logs in as such a *follower* to import readings.
+- **Follower account:** a separate LibreLinkUp account invited from the Libre app. It is not the account of the FreeStyle Libre app, and GBA should be the only app using it.
+- **Trend arrow:** the sensor's estimate of where glucose is heading: ↓ falling fast (more than 2 mg/dL per minute), ↘ falling, → steady, ↗ rising, ↑ rising fast.
+- **Stale data:** no new CGM reading for more than 15 minutes. The last value may be out of date, so it is greyed out and nothing should be dosed from it.
+- **Polling and backoff:** asking the server for new readings every few minutes, and waiting longer after each failure (and at least 5 minutes after "too many requests") so the account is not blocked.
+- **Fernet:** symmetric, authenticated encryption from the `cryptography` package. GBA uses it to store the LibreLinkUp password; the key lives only in an environment variable.
+- **Simulator source:** a pretend CGM that replays a simulated day, used for demos and tests.
 - **Notification centre:** the Alerts page in the app. Every reminder lands here first, so nothing is lost if a phone push fails.
 
 ## The bolus formula used in GBA
