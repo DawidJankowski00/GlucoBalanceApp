@@ -8,12 +8,12 @@ from glucobalance.models.reminders import Reminder, ReminderKind
 from glucobalance.models.sites import BodySide, BodySite, BodyView, SitePurpose, SiteRegion, SiteUse
 from glucobalance.models.user import (
     DeliveryMode,
-    DisplayUnit,
     MonitoringMode,
     SettingsTimeBlock,
     User,
     UserSettings,
 )
+from glucobalance.units import DisplayUnit
 
 __all__ = [
     "BodySide",

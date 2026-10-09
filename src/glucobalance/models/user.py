@@ -11,6 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from glucobalance.db import Base
 from glucobalance.models.types import UTCDateTime, str_enum
+from glucobalance.units import DisplayUnit
 
 
 def utc_now() -> datetime:
@@ -25,11 +26,6 @@ class DeliveryMode(StrEnum):
 class MonitoringMode(StrEnum):
     GLUCOMETER = "glucometer"
     CGM = "cgm"
-
-
-class DisplayUnit(StrEnum):
-    MGDL = "mg/dL"
-    MMOLL = "mmol/L"
 
 
 class User(Base):
