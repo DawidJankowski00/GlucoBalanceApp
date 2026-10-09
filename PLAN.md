@@ -67,7 +67,8 @@ The owner wants to build the app in segments and fully understand every one. Fol
 | `src/glucobalance/sitemap.py` | The body map (`SITES`, 24 sub-zones, ADR 0009) and `seed_body_sites()`; a migration loads it into `body_sites`. |
 | `src/glucobalance/rotation.py` | `rank_sites()` and `suggest_site()`: the pure site ranking (written by the owner). |
 | `src/glucobalance/site_service.py`, `web/sites.py` | Pump and pen rotations, logging a use, blocked sites with an optional end date, preference weights, days until the next set change; the `/sites` page (ADR 0010). |
-| `tests/test_sitemap.py`, `test_rotation.py`, `test_site_service.py`, `test_web_sites.py` | Stage 4 tests. |
+| `src/glucobalance/bodymap.py` | Zone rectangles for the SVG body map, heat levels and 30-day use counts (ADR 0011). |
+| `tests/test_sitemap.py`, `test_rotation.py`, `test_site_service.py`, `test_web_sites.py`, `test_bodymap.py`, `test_web_bodymap.py` | Stage 4 tests. |
 | `tests/test_foods.py`, `test_favourites.py`, `test_hypo_service.py`, `test_web_food_hypo.py` | Food search, favourites and hypo log tests. |
 | `.pre-commit-config.yaml` | Local hooks (ruff check --fix, ruff format, mypy) run through `uv run`, so they use `.venv` and the versions in `uv.lock`. |
 
@@ -258,7 +259,7 @@ Done when the app suggests the next site for both pump and pen users and respect
 - [x] Rotation algorithm as a pure function (written by the owner): rank sites by days since last use, rest period, blocked status and preference weights
 - [x] Pump mode: one suggestion per set change, log the change, show days until next change
 - [x] Pen mode: separate rotations for rapid-acting and long-acting, "site not available" with skip and end date
-- [ ] Clickable SVG body map with a usage heatmap
+- [x] Clickable SVG body map with a usage heatmap
 - [ ] Property-based tests (hypothesis): no blocked site is ever suggested, usage stays even over time
 
 ### Stage 5: Reminders and notifications

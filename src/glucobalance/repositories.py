@@ -218,6 +218,17 @@ class SiteRepository(Repository[BodySite]):
             .limit(1)
         ).one_or_none()
 
+    def use_counts(self, user_id: int, start: datetime, end: datetime) -> dict[str, int]:
+        """Uses per site code in ``[start, end)``, any purpose (unused sites absent)."""
+        _check_range(start, end)
+        rows = self.session.execute(
+            select(BodySite.code, func.count(SiteUse.id))
+            .join(SiteUse.site)
+            .where(SiteUse.user_id == user_id, SiteUse.used_at >= start, SiteUse.used_at < end)
+            .group_by(BodySite.code)
+        )
+        return {code: count for code, count in rows}
+
     def active_blocks(self, user_id: int, now: datetime) -> Sequence[SiteBlock]:
         """Blocks in force at ``now`` (started, and not yet ended), ordered by site code."""
         return self.session.scalars(

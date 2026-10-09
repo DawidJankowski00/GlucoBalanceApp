@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}{{ zone.label }} · {{ app_name }}{% endblock %}
+{% block content %}
+<p class="mb-2 text-sm"><a href="/sites" class="underline">Back to sites</a></p>
+{% include "_site_zone.html" %}
+{% endblock %}
