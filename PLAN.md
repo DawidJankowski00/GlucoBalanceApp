@@ -253,7 +253,7 @@ Done when manual readings are quick to enter and show on a daily chart.
 Done when the app suggests the next site for both pump and pen users and respects blocked sites.
 
 - [x] Body map data: regions, sub-zones, front and back
-- [ ] Rotation algorithm as a pure function (written by the owner): rank sites by days since last use, rest period, blocked status and preference weights
+- [x] Rotation algorithm as a pure function (written by the owner): rank sites by days since last use, rest period, blocked status and preference weights
 - [ ] Pump mode: one suggestion per set change, log the change, show days until next change
 - [ ] Pen mode: separate rotations for rapid-acting and long-acting, "site not available" with skip and end date
 - [ ] Clickable SVG body map with a usage heatmap
