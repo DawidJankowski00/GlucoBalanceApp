@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
+import glucobalance.models  # noqa: F401  (registers every table on Base.metadata)
 from glucobalance.db import Base, make_engine, make_session_factory
 
 
