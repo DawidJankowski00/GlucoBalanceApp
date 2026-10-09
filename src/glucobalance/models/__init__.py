@@ -5,6 +5,7 @@ from glucobalance.models.glucose import GlucoseReading, GlucoseTag, ReadingSourc
 from glucobalance.models.insulin import DoseKind, InsulinDose, InsulinType
 from glucobalance.models.notes import Note
 from glucobalance.models.reminders import Reminder, ReminderKind
+from glucobalance.models.settings_history import ChangeSource, SettingsChange
 from glucobalance.models.sites import BodySide, BodySite, BodyView, SitePurpose, SiteRegion, SiteUse
 from glucobalance.models.user import (
     DeliveryMode,
@@ -20,6 +21,7 @@ __all__ = [
     "BodySite",
     "BodyView",
     "CarbEntry",
+    "ChangeSource",
     "DeliveryMode",
     "DisplayUnit",
     "DoseKind",
@@ -32,6 +34,7 @@ __all__ = [
     "ReadingSource",
     "Reminder",
     "ReminderKind",
+    "SettingsChange",
     "SettingsTimeBlock",
     "SitePurpose",
     "SiteRegion",
