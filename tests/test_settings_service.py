@@ -73,6 +73,9 @@ def test_valid_input_passes() -> None:
         ),
         ({"time_blocks": (TimeBlockInput(time(0, 0), Decimal("0"), 40),)}, "carb ratio"),
         ({"time_blocks": (TimeBlockInput(time(0, 0), Decimal("10"), 2),)}, "sensitivity"),
+        ({"timezone": "Mars/Olympus_Mons"}, "time zone"),
+        ({"timezone": ""}, "time zone"),
+        ({"timezone": "../etc/passwd"}, "time zone"),
     ],
 )
 def test_invalid_input_is_rejected(changes: dict[str, object], message: str) -> None:
@@ -141,3 +144,17 @@ def test_invalid_update_changes_nothing(session: Session, user: User) -> None:
         )
     assert len(history(session, user)) == before
     assert session.query(SettingsChange).count() == before
+
+
+def test_timezone_defaults_to_utc_and_changes_are_logged(session: Session, user: User) -> None:
+    settings = apply_settings(session, user, make_input(), ChangeSource.ONBOARDING, user)
+    assert settings.timezone == "UTC"
+
+    warsaw = replace(make_input(), timezone="Europe/Warsaw")
+    apply_settings(session, user, warsaw, ChangeSource.USER, user)
+    latest = history(session, user)[0]
+    assert (latest.field, latest.old_value, latest.new_value) == (
+        "timezone",
+        "UTC",
+        "Europe/Warsaw",
+    )

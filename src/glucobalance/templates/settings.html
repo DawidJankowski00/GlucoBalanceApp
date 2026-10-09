@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import basics, block_rows, choice, button %}
+{% from "_macros.html" import basics, block_rows, choice, button, field %}
 {% block title %}Settings · {{ app_name }}{% endblock %}
 {% block content %}
 <div class="mb-4 flex items-baseline justify-between">
@@ -23,6 +23,11 @@
   <fieldset>
     <legend class="mb-2 font-medium">Targets and limits</legend>
     {{ basics(values, values.display_unit) }}
+  </fieldset>
+  <fieldset>
+    <legend class="mb-2 font-medium">Time zone</legend>
+    {{ field("Time zone", "timezone", values.timezone, "text", 'required list="timezones" autocomplete="off"', "Used for \"today\" and times on the log, for example Europe/Warsaw.") }}
+    <datalist id="timezones"><option value="" data-browser-timezone></option></datalist>
   </fieldset>
   <fieldset>
     <legend class="mb-2 font-medium">Carb ratio and sensitivity by time of day</legend>

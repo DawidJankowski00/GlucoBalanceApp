@@ -22,6 +22,7 @@ FIELD_LABELS = {
     "max_bolus_units": "Maximum bolus (units)",
     "dose_step_units": "Dose step (units)",
     "clinician_contact": "Clinician contact",
+    "timezone": "Time zone",
     "time_blocks": "Carb ratio and sensitivity blocks (mg/dL)",
 }
 SOURCE_LABELS = {

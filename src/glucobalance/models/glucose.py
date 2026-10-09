@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import CheckConstraint, ForeignKey, UniqueConstraint
+from sqlalchemy import CheckConstraint, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from glucobalance.db import Base
@@ -50,5 +50,6 @@ class GlucoseReading(Base):
     source: Mapped[ReadingSource] = mapped_column(str_enum(ReadingSource))
     tag: Mapped[GlucoseTag | None] = mapped_column(str_enum(GlucoseTag))
     trend: Mapped[Trend | None] = mapped_column(str_enum(Trend))
+    note: Mapped[str | None] = mapped_column(String(500))
 
     user: Mapped[User] = relationship()
