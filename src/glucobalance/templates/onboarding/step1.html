@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import choice, button %}
+{% block title %}Set up · {{ app_name }}{% endblock %}
+{% block content %}
+{% include "onboarding/_progress.html" %}
+<h1 class="mb-1 text-2xl font-semibold">How do you manage your diabetes?</h1>
+<p class="mb-4 text-sm text-slate-600">These two choices decide which screens and reminders you get. You can change them later and your history is kept.</p>
+<form method="post" action="/onboarding/1" class="space-y-6" hx-boost="false">
+  <fieldset>
+    <legend class="mb-2 font-medium">Insulin delivery</legend>
+    {{ choice("delivery_mode", values.delivery_mode, [("pump", "Insulin pump", "Infusion set changes every few days."), ("pens", "Pens (injections)", "Several injections a day, long- and rapid-acting.")]) }}
+  </fieldset>
+  <fieldset>
+    <legend class="mb-2 font-medium">Glucose monitoring</legend>
+    {{ choice("monitoring_mode", values.monitoring_mode, [("glucometer", "Glucometer", "Finger-prick readings you enter yourself."), ("cgm", "CGM", "A sensor sends readings automatically.")]) }}
+  </fieldset>
+  <fieldset>
+    <legend class="mb-2 font-medium">Glucose units</legend>
+    {{ choice("display_unit", values.display_unit or "mg/dL", [("mg/dL", "mg/dL", "Stored and shown as whole numbers."), ("mmol/L", "mmol/L", "Shown with one decimal.")]) }}
+  </fieldset>
+  {{ button("Next") }}
+</form>
+{% endblock %}

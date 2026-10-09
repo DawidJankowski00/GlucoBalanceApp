@@ -8,7 +8,7 @@ It is also a portfolio project: it is meant to show backend engineering, AI engi
 
 ## Project status
 
-**Planning stage. There is no application code in this repository yet.** Everything below describes what is planned, not what exists. Development will happen in small stages (see [Roadmap](#roadmap)), and this README will be updated as each stage lands.
+**Early development. Stages 0 to 2 are built:** project tooling, Docker and CI; the database layer (models, migrations, repositories, a simulated seed script); and accounts with an onboarding wizard, feature flags derived from the pump/pens and glucometer/CGM choices, a settings page with a full change history, and a PWA manifest. There is no glucose logging, site rotation, reminders, CGM import or AI assistant yet. The sections below describe what is planned. Development happens in small stages (see [Roadmap](#roadmap)), and this README is updated as each one lands.
 
 ## Planned features
 
@@ -76,9 +76,9 @@ The app is planned as a modular monolith: one FastAPI app split into domain modu
 
 Each stage ends with something that can be demonstrated.
 
-- [ ] **Stage 0: Foundations.** Project tooling, FastAPI skeleton, Docker Compose, CI.
-- [ ] **Stage 1: Domain model and data layer.** Core entities, migrations, simulated seed data.
-- [ ] **Stage 2: Accounts, onboarding and settings.** Sign-up, the two settings, feature flags.
+- [x] **Stage 0: Foundations.** Project tooling, FastAPI skeleton, Docker Compose, CI.
+- [x] **Stage 1: Domain model and data layer.** Core entities, migrations, simulated seed data.
+- [x] **Stage 2: Accounts, onboarding and settings.** Sign-up, the two settings, feature flags.
 - [ ] **Stage 3: Glucose logging.** Manual entry, insulin and carb logging, daily charts.
 - [ ] **Stage 4: Site rotation engine.** Next-site suggestions for pump and pens, blocked sites, body map.
 - [ ] **Stage 5: Reminders and notifications.** Scheduled reminders and Web Push.
@@ -93,22 +93,31 @@ Each stage ends with something that can be demonstrated.
 
 Requires [uv](https://docs.astral.sh/uv/) (and Docker for the container setup).
 
-**Locally**
+**Locally** (needs a running PostgreSQL, or set `GBA_DATABASE_URL` to a SQLite URL such as `sqlite:///gba.db`)
 
 ```bash
 uv sync
 cp .env.example .env
+uv run alembic upgrade head
 uv run uvicorn glucobalance.main:app --reload
 ```
 
-**With Docker Compose** (app + PostgreSQL)
+**With Docker Compose** (app + PostgreSQL; migrations run on start)
 
 ```bash
 cp .env.example .env
 docker compose up --build
 ```
 
-Either way, open <http://localhost:8000/health> to check the app is running.
+Open <http://localhost:8000> and create an account. The onboarding wizard asks for insulin delivery (pump or pens), glucose monitoring (glucometer or CGM), units, targets, insulin action time, maximum bolus and carb ratio / sensitivity by time of day. Settings can be changed later on the Settings page, and every change is kept in the history. <http://localhost:8000/health> reports that the app is running.
+
+Set `GBA_SECRET_KEY` (it signs the login cookie) to a long random value; the app refuses to start in production without one. To fill a demo user with 30 days of simulated pump and CGM data: `uv run --group sim python -m glucobalance.seed --days 30`.
+
+**Checks**
+
+```bash
+uv run ruff check && uv run ruff format --check && uv run mypy && uv run pytest
+```
 
 ## Data and privacy
 

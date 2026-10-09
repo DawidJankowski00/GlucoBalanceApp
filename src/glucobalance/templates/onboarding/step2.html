@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_macros.html" import basics, button %}
+{% block title %}Set up · {{ app_name }}{% endblock %}
+{% block content %}
+{% include "onboarding/_progress.html" %}
+<h1 class="mb-1 text-2xl font-semibold">Targets and limits</h1>
+<p class="mb-4 text-sm text-slate-600">Use the numbers agreed with your diabetes team.</p>
+<form method="post" action="/onboarding/2" class="space-y-6" hx-boost="false">
+  {{ basics(values, values.display_unit) }}
+  <div class="flex gap-3">
+    <a href="/onboarding/1" class="rounded border border-slate-300 px-4 py-2">Back</a>
+    {{ button("Next") }}
+  </div>
+</form>
+{% endblock %}

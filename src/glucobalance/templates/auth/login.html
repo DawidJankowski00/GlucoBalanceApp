@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, button %}
+{% block title %}Log in · {{ app_name }}{% endblock %}
+{% block content %}
+<h1 class="mb-4 text-2xl font-semibold">Log in</h1>
+<form method="post" action="/login" class="space-y-4" hx-boost="false">
+  {{ field("Email", "email", email or "", "email", "required autocomplete=email") }}
+  {{ field("Password", "password", "", "password", "required autocomplete=current-password") }}
+  {{ button("Log in") }}
+</form>
+<p class="mt-4 text-sm">New here? <a class="text-teal-700 underline" href="/signup">Create an account</a></p>
+{% endblock %}

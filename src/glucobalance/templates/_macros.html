@@ -1,0 +1,49 @@
+{% macro field(label, name, value="", type="text", attrs="", hint="") %}
+<label class="block">
+  <span class="text-sm font-medium">{{ label }}</span>
+  <input class="mt-1 block w-full rounded border border-slate-300 px-3 py-2" type="{{ type }}"
+         name="{{ name }}" value="{{ value }}" {{ attrs|safe }}>
+  {% if hint %}<span class="text-xs text-slate-500">{{ hint }}</span>{% endif %}
+</label>
+{% endmacro %}
+
+{% macro choice(name, current, options) %}
+<div class="space-y-2">
+  {% for value, title, text in options %}
+  <label class="flex cursor-pointer gap-3 rounded border border-slate-300 bg-white p-3 has-[:checked]:border-teal-600 has-[:checked]:bg-teal-50">
+    <input type="radio" name="{{ name }}" value="{{ value }}" class="mt-1" {% if current == value %}checked{% endif %} required>
+    <span><span class="block font-medium">{{ title }}</span><span class="text-sm text-slate-600">{{ text }}</span></span>
+  </label>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro button(text) %}
+<button class="rounded bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800">{{ text }}</button>
+{% endmacro %}
+
+{% macro block_rows(values, rows, unit_label) %}
+<table class="w-full text-sm">
+  <thead><tr class="text-left text-slate-600"><th class="pb-1">Starts at</th><th class="pb-1">Carb ratio (g per unit)</th><th class="pb-1">Sensitivity ({{ unit_label }} per unit)</th></tr></thead>
+  <tbody>
+  {% for row in rows %}
+  <tr>
+    <td class="pr-2 pb-2"><input class="w-full rounded border border-slate-300 px-2 py-1" name="block_start_{{ row }}" value="{{ values.get('block_start_' ~ row, '') }}" placeholder="HH:MM" inputmode="numeric"></td>
+    <td class="pr-2 pb-2"><input class="w-full rounded border border-slate-300 px-2 py-1" name="block_icr_{{ row }}" value="{{ values.get('block_icr_' ~ row, '') }}" inputmode="decimal"></td>
+    <td class="pb-2"><input class="w-full rounded border border-slate-300 px-2 py-1" name="block_isf_{{ row }}" value="{{ values.get('block_isf_' ~ row, '') }}" inputmode="decimal"></td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endmacro %}
+
+{% macro basics(values, unit_label) %}
+<div class="grid gap-4 sm:grid-cols-2">
+  {{ field("Low target (" ~ unit_label ~ ")", "target_low", values.target_low, "text", 'inputmode="decimal" required') }}
+  {{ field("High target (" ~ unit_label ~ ")", "target_high", values.target_high, "text", 'inputmode="decimal" required') }}
+  {{ field("Insulin action time (hours)", "insulin_action_hours", values.insulin_action_hours, "text", 'inputmode="decimal" required', "How long a dose keeps working, usually 3 to 5 hours.") }}
+  {{ field("Maximum single bolus (units)", "max_bolus_units", values.max_bolus_units, "text", 'inputmode="decimal" required', "A hard upper limit. Agree it with your diabetes team.") }}
+  {{ field("Dose step (units)", "dose_step_units", values.dose_step_units, "text", 'inputmode="decimal" required', "Smallest dose your pen or pump can give: 0.05, 0.1, 0.5 or 1.") }}
+  {{ field("Clinician contact (optional)", "clinician_contact", values.clinician_contact, "text", "", "Shown in safety messages.") }}
+</div>
+{% endmacro %}

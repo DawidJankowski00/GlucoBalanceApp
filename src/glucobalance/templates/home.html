@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="mb-1 text-2xl font-semibold">Hello, {{ user.display_name }}</h1>
+<p class="mb-4 text-slate-600">
+  {{ "Insulin pump" if user.settings.delivery_mode.value == "pump" else "Pens" }} ·
+  {{ "CGM" if user.settings.monitoring_mode.value == "cgm" else "Glucometer" }} ·
+  target {{ user.settings.target_low_mgdl }}–{{ user.settings.target_high_mgdl }} mg/dL
+</p>
+<h2 class="mb-2 font-medium">What the app will do for you</h2>
+<ul class="space-y-2">
+  {% for title, text in features %}
+  <li class="rounded border border-slate-200 bg-white p-3"><span class="font-medium">{{ title }}.</span> {{ text }}</li>
+  {% endfor %}
+</ul>
+<p class="mt-4 text-sm text-slate-500">Logging, charts and reminders arrive in the next stages.</p>
+{% endblock %}
