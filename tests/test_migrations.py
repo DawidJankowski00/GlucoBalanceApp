@@ -53,3 +53,17 @@ def test_there_is_a_single_head(alembic_config: Config) -> None:
     from alembic.script import ScriptDirectory
 
     assert len(ScriptDirectory.from_config(alembic_config).get_heads()) == 1
+
+
+def test_upgrade_loads_the_body_map(alembic_config: Config, database_url: str) -> None:
+    from sqlalchemy import text
+
+    from glucobalance.sitemap import SITES
+
+    command.upgrade(alembic_config, "head")
+
+    engine = make_engine(database_url)
+    with engine.connect() as conn:
+        count = conn.execute(text("SELECT COUNT(*) FROM body_sites")).scalar_one()
+    engine.dispose()
+    assert count == len(SITES)

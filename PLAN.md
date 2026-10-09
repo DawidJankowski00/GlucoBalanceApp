@@ -64,6 +64,8 @@ The owner wants to build the app in segments and fully understand every one. Fol
 | `src/glucobalance/foods.py` | `FoodSource` Protocol, `OpenFoodFacts` client, `CachedFoodSource` and `carbs_for_portion()` (ADR 0008). |
 | `src/glucobalance/favourites.py`, `hypo_service.py` | Favourite meals (add, list, delete, log) and the hypo log (a treatment with carbs also creates a carb entry). |
 | `src/glucobalance/web/food.py`, `web/hypo.py` | The `/log/foods` search piece and the `/log/hypo` page. |
+| `src/glucobalance/sitemap.py` | The body map (`SITES`, 24 sub-zones, ADR 0009) and `seed_body_sites()`; a migration loads it into `body_sites`. |
+| `tests/test_sitemap.py` | Body map tests. |
 | `tests/test_foods.py`, `test_favourites.py`, `test_hypo_service.py`, `test_web_food_hypo.py` | Food search, favourites and hypo log tests. |
 | `.pre-commit-config.yaml` | Local hooks (ruff check --fix, ruff format, mypy) run through `uv run`, so they use `.venv` and the versions in `uv.lock`. |
 
@@ -250,7 +252,7 @@ Done when manual readings are quick to enter and show on a daily chart.
 
 Done when the app suggests the next site for both pump and pen users and respects blocked sites.
 
-- [ ] Body map data: regions, sub-zones, front and back
+- [x] Body map data: regions, sub-zones, front and back
 - [ ] Rotation algorithm as a pure function (written by the owner): rank sites by days since last use, rest period, blocked status and preference weights
 - [ ] Pump mode: one suggestion per set change, log the change, show days until next change
 - [ ] Pen mode: separate rotations for rapid-acting and long-acting, "site not available" with skip and end date

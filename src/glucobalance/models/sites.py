@@ -47,6 +47,7 @@ class BodySite(Base):
     region: Mapped[SiteRegion] = mapped_column(str_enum(SiteRegion))
     side: Mapped[BodySide] = mapped_column(str_enum(BodySide))
     view: Mapped[BodyView] = mapped_column(str_enum(BodyView))
+    zone: Mapped[str] = mapped_column(String(30), default="", server_default="")
 
 
 class SiteUse(Base):
