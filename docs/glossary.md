@@ -22,6 +22,8 @@ Plain-language definitions of the diabetes terms used in GlucoBalanceApp. This i
 - **Fingerstick:** a glucose reading from a meter and a drop of blood from the fingertip. CGM users take one to confirm a reading that looks wrong.
 - **Correction:** a bolus taken only to bring a high glucose down, not for food.
 - **Reading tag:** a label on a meter reading that says when it was taken: fasting, before meal, after meal, bedtime or night. Statistics per time of day use it.
+- **Favourite meal:** a named amount of carbs saved for one-tap logging. It records grams only; the dose is always a separate decision.
+- **Open Food Facts:** a free, crowd-sourced food database used for the carb search. Its values can be wrong, so the number is always checked before saving.
 
 ## The bolus formula used in GBA
 

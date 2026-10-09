@@ -27,7 +27,7 @@ The owner wants to build the app in segments and fully understand every one. Fol
 |---|---|
 | `README.md` | Project description, planned features, roadmap, disclaimer. Describes the plan, not working features. |
 | `.gitignore` | Python, virtualenv, tool caches, secrets. |
-| `pyproject.toml` | Project metadata (`glucobalance`, Python >= 3.12, hatchling build) plus all tool config: ruff, mypy (strict), pytest. Dev dependency group: ruff, mypy, pytest, httpx, pre-commit. |
+| `pyproject.toml` | Project metadata (`glucobalance`, Python >= 3.12, hatchling build) plus all tool config: ruff, mypy (strict), pytest. `httpx` is a runtime dependency (food search). Dev dependency group: ruff, mypy, pytest, pre-commit. |
 | `uv.lock` | Pinned dependency versions. Commit it. |
 | `src/glucobalance/__init__.py` | Re-exports `MGDL_PER_MMOLL` and `mgdl_to_mmoll()` from `units.py`. |
 | `src/glucobalance/units.py` | `DisplayUnit`, `mgdl_to_mmoll()`, `mmoll_to_mgdl()`, `format_glucose()`. |
@@ -61,6 +61,10 @@ The owner wants to build the app in segments and fully understand every one. Fol
 | `src/glucobalance/logbook.py` | Logbook filters, newest-first paging (`query_logbook()`) and the CSV export (`to_csv()`, with a spreadsheet-formula guard). |
 | `src/glucobalance/web/chart_page.py`, `web/logbook_pages.py` | The `/chart`, `/logbook` and `/logbook.csv` pages. |
 | `tests/test_glucose_service.py`, `test_log_forms.py`, `test_web_glucose.py`, `test_treatment_service.py`, `test_timeline.py`, `test_web_entries.py`, `test_charts.py`, `test_logbook.py`, `test_web_logbook.py` | Stage 3 tests. |
+| `src/glucobalance/foods.py` | `FoodSource` Protocol, `OpenFoodFacts` client, `CachedFoodSource` and `carbs_for_portion()` (ADR 0008). |
+| `src/glucobalance/favourites.py`, `hypo_service.py` | Favourite meals (add, list, delete, log) and the hypo log (a treatment with carbs also creates a carb entry). |
+| `src/glucobalance/web/food.py`, `web/hypo.py` | The `/log/foods` search piece and the `/log/hypo` page. |
+| `tests/test_foods.py`, `test_favourites.py`, `test_hypo_service.py`, `test_web_food_hypo.py` | Food search, favourites and hypo log tests. |
 | `.pre-commit-config.yaml` | Local hooks (ruff check --fix, ruff format, mypy) run through `uv run`, so they use `.venv` and the versions in `uv.lock`. |
 
 **Already done:**
@@ -69,7 +73,7 @@ The owner wants to build the app in segments and fully understand every one. Fol
 - README and `.gitignore`.
 - Python tooling: uv, ruff (lint + format), mypy strict and pytest are configured and all run clean; pre-commit runs ruff and mypy on every commit.
 
-**Not done yet** (still planned): the rest of Stage 3 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms, a Today timeline, daily and weekly charts (Plotly, ADR 0007) and a filterable logbook with CSV export followed. There are no reminders or AI code yet.
+**Not done yet** (still planned): the rest of Stage 3 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms, a Today timeline, daily and weekly charts (Plotly, ADR 0007) and a filterable logbook with CSV export followed, then food search, favourite meals and a hypo log (ADR 0008). There are no reminders or AI code yet.
 
 Python is pinned to 3.12 with `.python-version` (ADR 0003), matching CI and Docker; simglucose does not work on 3.14.
 
@@ -239,8 +243,8 @@ Done when manual readings are quick to enter and show on a daily chart.
 - [x] Daily and weekly chart with target band
 - [x] Logbook table with filters and CSV export
 - [x] Insulin and carb entry forms, shown on the same timeline
-- [ ] Carb logging with food search (Open Food Facts), favourite meals
-- [ ] Hypo log with treatment taken
+- [x] Carb logging with food search (Open Food Facts), favourite meals
+- [x] Hypo log with treatment taken
 
 ### Stage 4: Site rotation engine
 
