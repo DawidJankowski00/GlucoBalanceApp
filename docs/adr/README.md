@@ -12,3 +12,4 @@ Use [0000-template.md](0000-template.md) as a starting point.
 | [0004](0004-session-cookie-login.md) | Signed session cookie for login, Argon2 for passwords |
 | [0005](0005-settings-change-log.md) | One service writes settings and logs every change |
 | [0006](0006-utc-storage-and-user-time-zone.md) | Store times in UTC, read and show them in the user's time zone |
+| [0007](0007-plotly-charts-and-csv-export.md) | Plotly charts built in Python, and a CSV export that guards against formulas |

@@ -57,7 +57,10 @@ The owner wants to build the app in segments and fully understand every one. Fol
 | `src/glucobalance/treatment_service.py` | Logging insulin doses (dose step, max bolus, basal cap) and carbs (1 to 300 g). Records only; never suggests a dose. |
 | `src/glucobalance/timeline.py` | `build_timeline()` merges a day's entries; `day_bounds()` turns a local day into UTC (23 or 25 hours on clock-change days). |
 | `src/glucobalance/web/today.py` | The `/today` page: one local day of entries with previous and next day links. |
-| `tests/test_glucose_service.py`, `test_log_forms.py`, `test_web_glucose.py`, `test_treatment_service.py`, `test_timeline.py`, `test_web_entries.py` | Stage 3 tests. |
+| `src/glucobalance/charts.py` | Plotly figures built in Python: `daily_figure()` (glucose, target band, insulin and carb markers) and `weekly_figure()` (readings and daily average). |
+| `src/glucobalance/logbook.py` | Logbook filters, newest-first paging (`query_logbook()`) and the CSV export (`to_csv()`, with a spreadsheet-formula guard). |
+| `src/glucobalance/web/chart_page.py`, `web/logbook_pages.py` | The `/chart`, `/logbook` and `/logbook.csv` pages. |
+| `tests/test_glucose_service.py`, `test_log_forms.py`, `test_web_glucose.py`, `test_treatment_service.py`, `test_timeline.py`, `test_web_entries.py`, `test_charts.py`, `test_logbook.py`, `test_web_logbook.py` | Stage 3 tests. |
 | `.pre-commit-config.yaml` | Local hooks (ruff check --fix, ruff format, mypy) run through `uv run`, so they use `.venv` and the versions in `uv.lock`. |
 
 **Already done:**
@@ -66,7 +69,7 @@ The owner wants to build the app in segments and fully understand every one. Fol
 - README and `.gitignore`.
 - Python tooling: uv, ruff (lint + format), mypy strict and pytest are configured and all run clean; pre-commit runs ruff and mypy on every commit.
 
-**Not done yet** (still planned): the rest of Stage 3 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms and a Today timeline followed. There are no charts, reminders or AI code yet.
+**Not done yet** (still planned): the rest of Stage 3 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms, a Today timeline, daily and weekly charts (Plotly, ADR 0007) and a filterable logbook with CSV export followed. There are no reminders or AI code yet.
 
 Python is pinned to 3.12 with `.python-version` (ADR 0003), matching CI and Docker; simglucose does not work on 3.14.
 
@@ -116,7 +119,7 @@ A Python web app (installable on a phone as a PWA) that logs glucose and insulin
 | Quality | pytest, hypothesis, ruff, mypy, pre-commit |
 | CI / packaging | GitHub Actions, Docker Compose |
 
-Installed so far: ruff, mypy, pytest, pre-commit, FastAPI, uvicorn, pydantic-settings, SQLAlchemy, Alembic, psycopg, argon2-cffi, Jinja2, python-multipart, itsdangerous, tzdata (time zone data for Windows), httpx (dev, for tests) and simglucose (optional `sim` group). Add the others in the stage that first needs them, and explain each one when it is introduced.
+Charts use Plotly.js from a CDN (no Python package). Installed so far: ruff, mypy, pytest, pre-commit, FastAPI, uvicorn, pydantic-settings, SQLAlchemy, Alembic, psycopg, argon2-cffi, Jinja2, python-multipart, itsdangerous, tzdata (time zone data for Windows), httpx (dev, for tests) and simglucose (optional `sim` group). Add the others in the stage that first needs them, and explain each one when it is introduced.
 
 ### Architecture
 
@@ -233,8 +236,8 @@ Done when manual readings are quick to enter and show on a daily chart.
 
 - [x] Manual entry form with tag and optional note, under 5 seconds to log
 - [x] Validation (plausible range, future timestamps, duplicates)
-- [ ] Daily and weekly chart with target band
-- [ ] Logbook table with filters and CSV export
+- [x] Daily and weekly chart with target band
+- [x] Logbook table with filters and CSV export
 - [x] Insulin and carb entry forms, shown on the same timeline
 - [ ] Carb logging with food search (Open Food Facts), favourite meals
 - [ ] Hypo log with treatment taken
