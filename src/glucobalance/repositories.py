@@ -20,7 +20,10 @@ from glucobalance.models import (
     HypoTreatment,
     InsulinDose,
     Note,
+    Notification,
+    PushSubscription,
     Reminder,
+    ReminderKind,
     SiteBlock,
     SitePreference,
     SitePurpose,
@@ -267,6 +270,89 @@ class ReminderRepository(Repository[Reminder]):
             .where(Reminder.user_id == user_id, Reminder.active.is_(True))
             .order_by(Reminder.id)
         ).all()
+
+    def for_user(self, user_id: int) -> Sequence[Reminder]:
+        return self.session.scalars(
+            select(Reminder).where(Reminder.user_id == user_id).order_by(Reminder.id)
+        ).all()
+
+    def get_owned(self, user_id: int, reminder_id: int) -> Reminder | None:
+        return self.session.scalars(
+            select(Reminder).where(Reminder.id == reminder_id, Reminder.user_id == user_id)
+        ).one_or_none()
+
+    def of_kind(self, user_id: int, kind: ReminderKind) -> Reminder | None:
+        return self.session.scalars(
+            select(Reminder)
+            .where(Reminder.user_id == user_id, Reminder.kind == kind)
+            .order_by(Reminder.id)
+            .limit(1)
+        ).one_or_none()
+
+    def due(self, now: datetime) -> Sequence[Reminder]:
+        """Active reminders whose raw due time has passed, across all users."""
+        return self.session.scalars(
+            select(Reminder)
+            .where(
+                Reminder.active.is_(True),
+                Reminder.next_due_at.is_not(None),
+                Reminder.next_due_at <= now,
+            )
+            .order_by(Reminder.next_due_at, Reminder.id)
+        ).all()
+
+    def delete(self, reminder: Reminder) -> None:
+        self.session.delete(reminder)
+        self.session.flush()
+
+
+class NotificationRepository(Repository[Notification]):
+    model = Notification
+
+    def recent(self, user_id: int, limit: int) -> Sequence[Notification]:
+        return self.session.scalars(
+            select(Notification)
+            .where(Notification.user_id == user_id)
+            .order_by(Notification.created_at.desc(), Notification.id.desc())
+            .limit(limit)
+        ).all()
+
+    def get_owned(self, user_id: int, notification_id: int) -> Notification | None:
+        return self.session.scalars(
+            select(Notification).where(
+                Notification.id == notification_id, Notification.user_id == user_id
+            )
+        ).one_or_none()
+
+    def unread(self, user_id: int) -> Sequence[Notification]:
+        return self.session.scalars(
+            select(Notification).where(
+                Notification.user_id == user_id, Notification.read_at.is_(None)
+            )
+        ).all()
+
+    def unread_count(self, user_id: int) -> int:
+        return len(self.unread(user_id))
+
+
+class PushSubscriptionRepository(Repository[PushSubscription]):
+    model = PushSubscription
+
+    def for_user(self, user_id: int) -> Sequence[PushSubscription]:
+        return self.session.scalars(
+            select(PushSubscription)
+            .where(PushSubscription.user_id == user_id)
+            .order_by(PushSubscription.id)
+        ).all()
+
+    def by_endpoint(self, endpoint: str) -> PushSubscription | None:
+        return self.session.scalars(
+            select(PushSubscription).where(PushSubscription.endpoint == endpoint)
+        ).one_or_none()
+
+    def delete(self, subscription: PushSubscription) -> None:
+        self.session.delete(subscription)
+        self.session.flush()
 
 
 class FavouriteRepository(Repository[FavouriteMeal]):

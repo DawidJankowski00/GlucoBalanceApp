@@ -5,7 +5,13 @@ from glucobalance.models.glucose import GlucoseReading, GlucoseTag, ReadingSourc
 from glucobalance.models.hypo import HypoTreatment, HypoTreatmentKind
 from glucobalance.models.insulin import DoseKind, InsulinDose, InsulinType
 from glucobalance.models.notes import Note
-from glucobalance.models.reminders import Reminder, ReminderKind
+from glucobalance.models.reminders import (
+    Notification,
+    PushSubscription,
+    Reminder,
+    ReminderKind,
+    RuleType,
+)
 from glucobalance.models.settings_history import ChangeSource, SettingsChange
 from glucobalance.models.sites import (
     BodySide,
@@ -44,9 +50,12 @@ __all__ = [
     "InsulinType",
     "MonitoringMode",
     "Note",
+    "Notification",
+    "PushSubscription",
     "ReadingSource",
     "Reminder",
     "ReminderKind",
+    "RuleType",
     "SettingsChange",
     "SettingsTimeBlock",
     "SiteBlock",

@@ -75,6 +75,9 @@ class UserSettings(Base):
     # infusion set changes.
     site_rest_days: Mapped[int] = mapped_column(default=14, server_default="14")
     set_change_days: Mapped[int] = mapped_column(default=3, server_default="3")
+    # Quiet hours for reminders, on the user's clock. Both empty means no quiet hours.
+    quiet_start: Mapped[time | None]
+    quiet_end: Mapped[time | None]
 
     user: Mapped[User] = relationship(back_populates="settings")
     time_blocks: Mapped[list[SettingsTimeBlock]] = relationship(

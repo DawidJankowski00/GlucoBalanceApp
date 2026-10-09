@@ -18,6 +18,7 @@ from glucobalance.glucose_service import (
     suggest_tag,
 )
 from glucobalance.models import DeliveryMode, DoseKind, GlucoseTag, InsulinType, User, UserSettings
+from glucobalance.reminder_service import schedule_hypo_recheck
 from glucobalance.treatment_service import log_carbs, log_dose
 from glucobalance.units import format_glucose
 from glucobalance.web.deps import CurrentUser, DbSession, Templates
@@ -131,6 +132,8 @@ async def save_glucose(
         return _glucose_page(
             request, templates, db, user, settings, form, error=str(error), status_code=422
         )
+    if is_low(reading.value_mgdl):
+        schedule_hypo_recheck(db, user, event_at=reading.measured_at, now=_now())
     db.commit()
     shown = format_glucose(reading.value_mgdl, settings.display_unit)
     request.session["flash"] = f"Saved {shown} at {reading.measured_at.astimezone(zone):%H:%M}."
