@@ -1,5 +1,11 @@
 """ORM models. Importing this package registers every table on ``Base.metadata``."""
 
+from glucobalance.models.assistant import (
+    AssistantMessage,
+    MessageRole,
+    StoredSuggestion,
+    SuggestionStatus,
+)
 from glucobalance.models.carbs import CarbEntry, FavouriteMeal
 from glucobalance.models.cgm import CGMConnection, CGMSourceKind, GlucoseAlertKind
 from glucobalance.models.glucose import GlucoseReading, GlucoseTag, ReadingSource, Trend
@@ -34,6 +40,7 @@ from glucobalance.models.user import (
 from glucobalance.units import DisplayUnit
 
 __all__ = [
+    "AssistantMessage",
     "BodySide",
     "BodySite",
     "BodyView",
@@ -52,6 +59,7 @@ __all__ = [
     "HypoTreatmentKind",
     "InsulinDose",
     "InsulinType",
+    "MessageRole",
     "MonitoringMode",
     "Note",
     "Notification",
@@ -67,6 +75,8 @@ __all__ = [
     "SitePurpose",
     "SiteRegion",
     "SiteUse",
+    "StoredSuggestion",
+    "SuggestionStatus",
     "Trend",
     "User",
     "UserSettings",
