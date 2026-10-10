@@ -32,6 +32,6 @@ def session(engine: Engine) -> Iterator[Session]:
 @pytest.fixture
 def client(engine: Engine) -> Iterator[TestClient]:
     """A test client for an app that uses the test database."""
-    settings = Settings(environment="test", secret_key="test-secret-key")
+    settings = Settings(environment="test", secret_key="test-secret-key", llm_provider="none")
     with TestClient(create_app(settings, engine)) as client:
         yield client

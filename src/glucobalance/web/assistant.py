@@ -11,6 +11,7 @@ from glucobalance.agent import forget, history, respond
 from glucobalance.analytics_service import build_analytics
 from glucobalance.llm import LLMClient, LLMError
 from glucobalance.models import DisplayUnit, StoredSuggestion, UserSettings
+from glucobalance.security import RateLimiter
 from glucobalance.units import mgdl_to_mmoll
 from glucobalance.web.deps import CurrentUser, DbSession, Templates
 from glucobalance.web.rendering import render
@@ -28,6 +29,11 @@ def _now() -> datetime:
 def _llm(request: Request) -> LLMClient | None:
     client: LLMClient | None = request.app.state.llm
     return client
+
+
+def _limiter(request: Request) -> RateLimiter:
+    limiter: RateLimiter = request.app.state.assistant_limiter
+    return limiter
 
 
 def describe_value(setting: str, value: Decimal, unit: DisplayUnit) -> str:
@@ -68,6 +74,8 @@ def ask(
         request.session["flash"] = "The assistant is not set up on this server."
     elif not question.strip():
         request.session["flash"] = "Type a question first."
+    elif not _limiter(request).allow(str(user.id)):
+        request.session["flash"] = "You are asking quickly. Wait a few minutes and try again."
     else:
         try:
             respond(db, user, client, question, now=_now())

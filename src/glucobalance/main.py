@@ -13,17 +13,21 @@ from glucobalance.cgm.crypto import SecretBox, SecretKeyError
 from glucobalance.cgm_service import CGMRuntime
 from glucobalance.config import Settings, get_settings
 from glucobalance.db import make_engine, make_session_factory
+from glucobalance.demo_data import seed_demo_users
 from glucobalance.foods import CachedFoodSource, FoodSource, OpenFoodFacts
 from glucobalance.forecast.models import Forecaster, load_forecaster
 from glucobalance.llm import LLMClient, build_llm
 from glucobalance.push import PushSender, WebPushSender
 from glucobalance.scheduler import build_scheduler
+from glucobalance.security import CrossSiteGuard, RateLimiter, SecurityHeadersMiddleware
 from glucobalance.web import (
+    account,
     analytics,
     assistant,
     auth,
     cgm,
     chart_page,
+    demo,
     food,
     hypo,
     log,
@@ -67,6 +71,10 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         """Start the reminder scheduler with the app and stop it again on shutdown."""
+        if settings.demo_mode:
+            with session_factory() as session:
+                seed_demo_users(session, replace=True)
+                session.commit()
         if settings.run_scheduler:
             scheduler = build_scheduler(settings, engine, session_factory, push_sender, cgm_runtime)
             scheduler.start()
@@ -88,6 +96,11 @@ def create_app(
     app.state.settings = settings
     app.state.llm = llm
     app.state.forecaster = forecaster or load_forecaster(settings.forecast_model_path)
+    # Rate limits (ADR 0020): slow down password guessing and cap assistant (LLM) use.
+    app.state.login_ip_limiter = RateLimiter(limit=30, window_seconds=300)
+    app.state.login_email_limiter = RateLimiter(limit=8, window_seconds=900)
+    app.state.signup_limiter = RateLimiter(limit=10, window_seconds=3600)
+    app.state.assistant_limiter = RateLimiter(limit=30, window_seconds=600)
 
     # The login is a signed cookie holding only the user id. Lax SameSite stops other sites
     # from making the browser send it on a form POST; HTTPS-only outside development.
@@ -98,6 +111,8 @@ def create_app(
         same_site="lax",
         https_only=settings.environment == "production",
     )
+    app.add_middleware(CrossSiteGuard)
+    app.add_middleware(SecurityHeadersMiddleware, hsts=settings.environment == "production")
     app.state.session_factory = session_factory
     app.state.templates = make_templates(settings.app_name)
     app.state.food_source = food_source or CachedFoodSource(OpenFoodFacts())
@@ -118,6 +133,8 @@ def create_app(
     app.include_router(push.router)
     app.include_router(cgm.router)
     app.include_router(assistant.router)
+    app.include_router(account.router)
+    app.include_router(demo.router)
 
     @app.get("/health")
     def health() -> dict[str, str]:

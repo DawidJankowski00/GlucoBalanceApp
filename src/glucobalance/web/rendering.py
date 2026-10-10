@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import object_session
 
+from glucobalance.demo_data import DEMO_EMAILS
 from glucobalance.features import feature_flags
 from glucobalance.models import User
 from glucobalance.reminder_service import unread_count
@@ -40,5 +41,12 @@ def render(
         session = object_session(user)
         if session is not None:
             unread = unread_count(session, user)
-    context.update(user=user, flags=flags, unread=unread, flash=request.session.pop("flash", None))
+    context.update(
+        user=user,
+        flags=flags,
+        unread=unread,
+        flash=request.session.pop("flash", None),
+        demo_mode=request.app.state.settings.demo_mode,
+        is_demo=user is not None and user.email in DEMO_EMAILS,
+    )
     return templates.TemplateResponse(request, name, context, status_code=status_code)
