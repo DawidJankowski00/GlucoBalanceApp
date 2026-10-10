@@ -23,6 +23,8 @@ from glucobalance.cgm_service import (
     use_simulator,
 )
 from glucobalance.features import feature_flags
+from glucobalance.forecast.models import Forecaster
+from glucobalance.forecast_service import low_soon
 from glucobalance.models import CGMSourceKind, GlucoseReading, Trend, User, UserSettings
 from glucobalance.units import format_glucose
 from glucobalance.web.deps import CurrentUser, DbSession, Templates
@@ -87,7 +89,14 @@ def sparkline(
     }
 
 
-def _live_context(db: DbSession, user: User, settings: UserSettings) -> dict[str, Any]:
+def _forecaster(request: Request) -> Forecaster:
+    forecaster: Forecaster = request.app.state.forecaster
+    return forecaster
+
+
+def _live_context(
+    db: DbSession, user: User, settings: UserSettings, forecaster: Forecaster
+) -> dict[str, Any]:
     now = _now()
     status = live_status(db, user, now=now, hours=LIVE_HOURS)
     zone = ZoneInfo(settings.timezone)
@@ -97,6 +106,7 @@ def _live_context(db: DbSession, user: User, settings: UserSettings) -> dict[str
         "stale": status.stale,
         "latest": None,
         "spark": None,
+        "low_soon": low_soon(db, user, forecaster, now=now),
     }
     if latest is not None:
         arrow, words = ARROWS.get(latest.trend, ("", "")) if latest.trend else ("", "")
@@ -140,7 +150,7 @@ def live_page(
         "live.html",
         user,
         cgm=cgm,
-        **(_live_context(db, user, settings) if cgm else {}),
+        **(_live_context(db, user, settings, _forecaster(request)) if cgm else {}),
     )
 
 
@@ -152,7 +162,8 @@ def live_panel(
     settings = user.settings
     if settings is None:
         return RedirectResponse("/onboarding/1", status_code=303)
-    return render(request, templates, "_live_panel.html", user, **_live_context(db, user, settings))
+    context = _live_context(db, user, settings, _forecaster(request))
+    return render(request, templates, "_live_panel.html", user, **context)
 
 
 # ---------- settings ----------

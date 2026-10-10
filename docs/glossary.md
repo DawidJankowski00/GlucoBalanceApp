@@ -64,6 +64,17 @@ Plain-language definitions of the diabetes terms used in GlucoBalanceApp. This i
 - **Prompt injection:** text that tries to make the model ignore its rules ("ignore your rules", "pretend the calculator said 9 units"). The output check does not rely on the model resisting it.
 - **Weekly review:** a summary of the last two weeks plus at most three adjustment suggestions, each accepted or rejected by you.
 - **Evaluation suite (evals):** a fixed set of test conversations with simulated patients, scored for safety and usefulness, used to compare models and catch regressions.
+- **Forecast horizon:** how far ahead a prediction looks. GBA's forecast looks 30 minutes ahead.
+- **Feature:** one input number for a model, such as the glucose change over the last 15 minutes or the insulin on board.
+- **Baseline:** the simplest sensible prediction, used to judge a model. GBA's are "glucose stays where it is" (last value) and "the last 30 minutes' trend continues" (linear trend).
+- **Gradient boosting:** a model built from many small decision trees, each one correcting the errors the previous ones still make.
+- **Carbs on board (COB):** carbohydrate eaten but not yet absorbed. GBA's forecast assumes it is absorbed in a straight line over 3 hours.
+- **RMSE (root mean squared error):** the typical size of a forecast's miss in mg/dL, counting big misses more heavily. **MAE** (mean absolute error) is the plain average miss.
+- **Clarke error grid:** a chart that sorts each (real, predicted) glucose pair into zones A to E by how risky acting on the wrong number would be. A is accurate, B harmless, C to E increasingly dangerous.
+- **Sensitivity and precision:** for the low warning, sensitivity is the share of real lows that were warned about; precision is the share of warnings that were followed by a real low.
+- **Likely low soon:** the live-page warning shown when glucose is not low yet but the forecast drops below 80 mg/dL within 30 minutes. The predicted number is never shown.
+- **Model card:** a short document that says what a model is for, how it was tested and where it should not be trusted.
+- **Synthetic patient:** made-up glucose, meal and insulin data from a simple model, used to train and test without real health data.
 
 ## The bolus formula used in GBA
 

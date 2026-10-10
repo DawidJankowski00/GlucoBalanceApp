@@ -105,7 +105,7 @@ Each stage ends with something that can be demonstrated.
 - [x] **Stage 7: Analytics and reports.** Time in range, glucose profile, pattern detection, PDF report.
 - [x] **Stage 8: AI assistant, deterministic core.** Bolus calculator, insulin on board, capped suggestions.
 - [x] **Stage 9: AI assistant, LLM agent.** Tool-calling agent, guardrails, evaluation suite.
-- [ ] **Stage 10: Forecast model (optional).** 30-minute glucose prediction with honest error reporting.
+- [x] **Stage 10: Forecast model (optional).** 30-minute glucose prediction with honest error reporting.
 - [ ] **Stage 11: Polish and launch.** Demo accounts, security pass, public demo on simulated data.
 
 ## Getting started
