@@ -60,8 +60,10 @@ addopts = ["-ra", "--strict-markers", "--strict-config"]
 dev = [
     "hypothesis>=6.168.5",
     "mypy>=2.4.0",
+    "pip-audit>=2.10.1",
     "pre-commit>=4.6.2",
     "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
     "respx>=0.23.1",
     "ruff>=0.16.10",
 ]
@@ -77,3 +79,14 @@ module = [
     "simglucose.*", "pandas.*", "pywebpush.*", "apscheduler.*", "sklearn.*", "joblib.*",
 ]
 ignore_missing_imports = true
+
+# ---------- coverage ----------
+[tool.coverage.run]
+source = ["glucobalance"]
+branch = false
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+skip_covered = true
+exclude_also = ["if __name__ == .__main__.:", "pragma: no cover"]
