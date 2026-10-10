@@ -41,6 +41,14 @@ class Settings(BaseSettings):
     cgm_secret_key: str | None = None
     cgm_tick_seconds: int = Field(default=60, ge=15)
 
+    # The assistant. "none" turns it off; "ollama" talks to a local Ollama server; "claude" uses
+    # the Claude API and needs GBA_ANTHROPIC_API_KEY.
+    llm_provider: Literal["none", "ollama", "claude"] = "none"
+    ollama_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3.1"
+    anthropic_api_key: str | None = None
+    anthropic_model: str = "claude-haiku-5-5"
+
     @property
     def run_scheduler(self) -> bool:
         if self.scheduler_enabled is None:
