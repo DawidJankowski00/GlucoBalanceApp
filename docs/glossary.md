@@ -38,7 +38,7 @@ Plain-language definitions of the diabetes terms used in GlucoBalanceApp. This i
 - **LibreLinkUp:** Abbott's app for family members who follow someone's FreeStyle Libre readings. GBA logs in as such a *follower* to import readings.
 - **Follower account:** a separate LibreLinkUp account invited from the Libre app. It is not the account of the FreeStyle Libre app, and GBA should be the only app using it.
 - **Trend arrow:** the sensor's estimate of where glucose is heading: ↓ falling fast (more than 2 mg/dL per minute), ↘ falling, → steady, ↗ rising, ↑ rising fast.
-- **Stale data:** no new CGM reading for more than 15 minutes. The last value may be out of date, so it is greyed out and nothing should be dosed from it.
+- **Stale data:** no new CGM reading for more than 15 minutes. The last value may be out of date, so it is greyed out and nothing should be dosed from it. The bolus calculator uses the same 15-minute limit for any reading, CGM or glucometer.
 - **Polling and backoff:** asking the server for new readings every few minutes, and waiting longer after each failure (and at least 5 minutes after "too many requests") so the account is not blocked.
 - **Fernet:** symmetric, authenticated encryption from the `cryptography` package. GBA uses it to store the LibreLinkUp password; the key lives only in an environment variable.
 - **Simulator source:** a pretend CGM that replays a simulated day, used for demos and tests.
@@ -50,6 +50,12 @@ Plain-language definitions of the diabetes terms used in GlucoBalanceApp. This i
 - **Low episode:** one stretch of low readings. Lows within an hour of each other count as one episode.
 - **Lipohypertrophy:** a lump of fatty tissue under the skin from using the same site too often. Insulin is absorbed unevenly there, which can show up as higher glucose after using that site.
 - **Notification centre:** the Alerts page in the app. Every reminder lands here first, so nothing is lost if a phone push fails.
+- **Correction target:** the glucose a correction aims for. GBA uses the middle of your target range (70 to 180 gives 125).
+- **Linear IOB:** a simple insulin-on-board model where a dose counts in full when taken and falls in a straight line to nothing at the end of the insulin action time.
+- **Dose step:** the smallest amount a pen or pump can give (for example 0.5 units). A suggested bolus is always a whole number of steps.
+- **Max bolus:** the largest single bolus the app will ever suggest, agreed with your clinic. A larger sum is cut to it and marked as capped.
+- **Adjustment suggestion:** a proposal to change one ICR or ISF value for one time block by at most 10%, based on a pattern. Nothing changes until you accept it.
+- **Review period:** 7 days. A setting changed in that time gets no new suggestion, so each change can be judged before the next.
 
 ## The bolus formula used in GBA
 

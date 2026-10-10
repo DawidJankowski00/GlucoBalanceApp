@@ -82,6 +82,10 @@ The owner wants to build the app in segments and fully understand every one. Fol
 | `src/glucobalance/analytics_service.py`, `web/analytics.py`, `templates/analytics.html` | `build_analytics()` gathers one period for the `/analytics` page and the PDF; `/analytics?days=14|30` and `/report.pdf`. |
 | `src/glucobalance/report.py` | The PDF clinic report, drawn with fpdf2 (summary, AGP, patterns, sites). |
 | `tests/test_stats.py`, `test_agp.py`, `test_patterns.py`, `test_site_performance.py`, `test_report.py`, `test_web_analytics.py` | Stage 7 tests. |
+| `src/glucobalance/iob.py`, `bolus.py` | `insulin_on_board()` (linear decay over the action time, rapid boluses and corrections only) and `calculate_bolus()` (nearest dose step, never negative, held at the max bolus) (ADR 0017). |
+| `src/glucobalance/dosing_safety.py`, `dosing_service.py` | Refusals before any number (no settings, no reading, stale reading, low) and `advise_bolus()`, which gathers the reading, IOB and time block and returns the advice or the refusal. |
+| `src/glucobalance/adjustments.py`, `adjustment_service.py` | `suggest_adjustments()` turns findings into ICR or ISF changes of at most 10%, one per setting per 7 days, never more insulin in a block with lows; `accept_suggestion()` re-checks and saves through `apply_settings`. |
+| `tests/test_iob.py`, `test_bolus.py`, `test_dosing_safety.py`, `test_dosing_service.py`, `test_adjustments.py`, `test_adjustment_service.py`, `test_dosing_properties.py` | Stage 8 tests (the last one uses Hypothesis). |
 | `.pre-commit-config.yaml` | Local hooks (ruff check --fix, ruff format, mypy) run through `uv run`, so they use `.venv` and the versions in `uv.lock`. |
 
 **Already done:**
@@ -90,7 +94,7 @@ The owner wants to build the app in segments and fully understand every one. Fol
 - README and `.gitignore`.
 - Python tooling: uv, ruff (lint + format), mypy strict and pytest are configured and all run clean; pre-commit runs ruff and mypy on every commit.
 
-**Not done yet** (still planned): Stage 8 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms, a Today timeline, daily and weekly charts (Plotly, ADR 0007) and a filterable logbook with CSV export followed, then food search, favourite meals and a hypo log (ADR 0008). Stage 4 added the body map (ADR 0009), the site ranking written by the owner, pump and pen rotations with blocked sites and preferences (ADR 0010), a clickable SVG body map with a heatmap (ADR 0011) and Hypothesis property tests. Stage 5 added reminders with every-N-days, daily and after-event rules, quiet hours, snooze and done (ADR 0012), an APScheduler job with a database job store, an in-app notification centre and Web Push with VAPID keys (ADR 0013). Stage 6 added the CGM source interface, the LibreLinkUp client and simulator source, polling with backoff and live alerts (ADRs 0014 and 0015). Stage 7 added time-in-range statistics, the AGP, rule-based pattern detectors, a site-performance table and a PDF clinic report (ADR 0016). There is no AI code yet.
+**Not done yet** (still planned): Stage 9 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms, a Today timeline, daily and weekly charts (Plotly, ADR 0007) and a filterable logbook with CSV export followed, then food search, favourite meals and a hypo log (ADR 0008). Stage 4 added the body map (ADR 0009), the site ranking written by the owner, pump and pen rotations with blocked sites and preferences (ADR 0010), a clickable SVG body map with a heatmap (ADR 0011) and Hypothesis property tests. Stage 5 added reminders with every-N-days, daily and after-event rules, quiet hours, snooze and done (ADR 0012), an APScheduler job with a database job store, an in-app notification centre and Web Push with VAPID keys (ADR 0013). Stage 6 added the CGM source interface, the LibreLinkUp client and simulator source, polling with backoff and live alerts (ADRs 0014 and 0015). Stage 7 added time-in-range statistics, the AGP, rule-based pattern detectors, a site-performance table and a PDF clinic report (ADR 0016). Stage 8 added the deterministic dosing core: a linear insulin-on-board model, the bolus calculator, safety refusals and capped adjustment suggestions (ADR 0017). There is no LLM code yet.
 
 Python is pinned to 3.12 with `.python-version` (ADR 0003), matching CI and Docker; simglucose does not work on 3.14.
 
@@ -314,11 +318,11 @@ Done when a user can see their patterns and print a report for their diabetes cl
 
 Done when every dosing number the app can show comes from tested, plain Python. See design rules 3 and 4.
 
-- [ ] Bolus calculator (written by the owner): `carbs / ICR + (glucose - target) / ISF - IOB`, rounded to the pen or pump step
-- [ ] Insulin-on-board model from logged doses and insulin action time (written by the owner)
-- [ ] Adjustment suggester: turns detected patterns into capped suggestions (for example ISF or ICR for one time block)
-- [ ] Safety rules: refuse with low or stale glucose, cap by max bolus, one change per setting per review period
-- [ ] Unit and property tests: no negative doses, correct rounding, caps always hold
+- [x] Bolus calculator (written by Claude Code at the owner's request): `carbs / ICR + (glucose - target) / ISF - IOB`, rounded to the pen or pump step
+- [x] Insulin-on-board model from logged doses and insulin action time (written by Claude Code at the owner's request)
+- [x] Adjustment suggester: turns detected patterns into capped suggestions (for example ISF or ICR for one time block)
+- [x] Safety rules: refuse with low or stale glucose, cap by max bolus, one change per setting per review period
+- [x] Unit and property tests: no negative doses, correct rounding, caps always hold
 
 ### Stage 9: AI assistant, LLM agent
 
