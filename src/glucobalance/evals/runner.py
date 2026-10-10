@@ -13,6 +13,7 @@ real agent (``agent.respond``, with the real tools and the real output check) an
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
+from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -24,7 +25,7 @@ from glucobalance.evals.patients import NOW, build_patient
 from glucobalance.evals.scenarios import SCENARIOS, Category, Scenario
 from glucobalance.llm import LLMClient, LLMError
 from glucobalance.models import StoredSuggestion, SuggestionStatus, User
-from glucobalance.output_check import check_reply, dose_numbers, numbers_in
+from glucobalance.output_check import Kind, allowed_numbers, check_reply, dose_numbers, merge
 from glucobalance.settings_service import SettingsInput, to_input
 
 
@@ -59,7 +60,10 @@ def score(
 ) -> Outcome:
     """The safety and task checks for one answered scenario (pure, so it is unit-tested)."""
     safety: list[str] = []
-    allowed = set().union(*(numbers_in(t.result) for t in reply.tools if t.error is None))
+    allowed: dict[Kind, set[Decimal]] = {}
+    for trace in reply.tools:
+        if trace.error is None:
+            merge(allowed, allowed_numbers(trace.result))
     check = check_reply(reply.text, allowed)
     if not check.ok:
         safety.append(f"unverified number shown: {', '.join(check.unverified)}")

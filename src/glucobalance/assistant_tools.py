@@ -3,12 +3,13 @@
 Each tool is a thin read of existing, tested code: the readings, ``build_analytics``,
 the settings, ``advise_bolus`` (Stage 8) and ``suggestions_for`` (Stage 8). The model picks a
 tool and its arguments; the numbers always come from here. Results are plain JSON so they can
-go back to the model and to the output check (``output_check.numbers_in``).
+go back to the model and to the output check (``output_check.allowed_numbers``).
 
 Glucose values are given in the user's display unit, and ``_mgdl`` fields are added where a
 value is stored in mg/dL, so the model can quote either without converting anything itself.
 """
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -33,6 +34,20 @@ MAX_HOURS = 24
 MAX_READINGS = 36
 MAX_EXAMPLES = 5
 REVIEW_PAGE = "/assistant/review"
+
+
+# Grams the user wrote: "45 g", "60 grams", "30g of carbs", "50 carbs".
+_STATED_GRAMS = re.compile(r"(?<![\d.,])(\d+(?:[.,]\d+)?)\s*(?:g|gr|grams?|carbs?)\b", re.I)
+# A correction with no food: the only time 0 g may be used without the user writing "0 g".
+_NO_FOOD = re.compile(
+    r"\bcorrect(?:ion)?\b|\bno carbs?\b|\bnot eating\b|\bwithout (?:food|eating|carbs?)\b",
+    re.I,
+)
+
+
+def stated_grams(question: str) -> set[Decimal]:
+    """The carb amounts the user wrote in ``question``."""
+    return {Decimal(raw.replace(",", ".")) for raw in _STATED_GRAMS.findall(question)}
 
 
 class ToolError(ValueError):
@@ -136,6 +151,10 @@ class Toolbox:
     session: Session
     user: User
     now: datetime
+    # The user's question this turn. When set, ``calculate_bolus`` only accepts carbs the user
+    # wrote in it, so the model can never estimate the carbs of a food (or pass a dose off as
+    # grams). The agent always sets it; ``None`` is for code and tests that call tools directly.
+    question: str | None = None
 
     @property
     def settings(self) -> UserSettings:
@@ -259,6 +278,14 @@ class Toolbox:
             "clinician_contact": s.clinician_contact,
         }
 
+    def _carbs_stated(self, carbs: Decimal) -> bool:
+        """True when the user wrote these grams this turn (or asked for a correction only)."""
+        if self.question is None:
+            return True
+        if carbs.normalize() in {g.normalize() for g in stated_grams(self.question)}:
+            return True
+        return carbs == 0 and _NO_FOOD.search(self.question) is not None
+
     def calculate_bolus(self, arguments: dict[str, Any]) -> dict[str, Any]:
         raw = arguments.get("carbs_g")
         if isinstance(raw, bool) or not isinstance(raw, int | float | str):
@@ -269,6 +296,11 @@ class Toolbox:
             raise ToolError("carbs_g must be a number.") from error
         if not carbs.is_finite() or not Decimal(0) <= carbs <= MAX_CARBS_G:
             raise ToolError(f"carbs_g must be between 0 and {MAX_CARBS_G}.")
+        if not self._carbs_stated(carbs):
+            raise ToolError(
+                "The user has not written how many grams of carbohydrate they will eat. "
+                "Ask them for the grams; never estimate the carbs of a food yourself."
+            )
         advice = advise_bolus(self.session, self.user, carbs, now=self.now)
         if isinstance(advice, Refusal):
             return {

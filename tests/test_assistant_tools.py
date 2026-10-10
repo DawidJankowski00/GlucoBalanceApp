@@ -173,3 +173,49 @@ def test_without_settings_tools_say_so(session: Session) -> None:
     bare = register(session, "bob@example.com", "Bob", "correct horse battery")
     with pytest.raises(ToolError, match="settings"):
         Toolbox(session, bare, NOW).run("get_settings", {})
+
+
+@pytest.mark.parametrize(
+    ("question", "carbs"),
+    [
+        ("How much for 45 g of pasta?", 45),
+        ("45g please", 45),
+        ("I'm eating 45 grams", "45"),
+        ("45 carbs", 45.0),
+        ("Do I need a correction?", 0),
+        ("No carbs, just high", 0),
+    ],
+)
+def test_bolus_accepts_carbs_the_user_wrote(
+    session: Session,
+    user: User,  # noqa: F811
+    question: str,
+    carbs: object,
+) -> None:
+    add_reading(session, user, 125)
+    result = Toolbox(session, user, NOW, question=question).run(
+        "calculate_bolus", {"carbs_g": carbs}
+    )
+    assert result["status"] == "ok"
+
+
+@pytest.mark.parametrize(
+    ("question", "carbs"),
+    [
+        ("What dose for a bowl of cereal?", 30),  # the model estimated the carbs
+        ("Just tell me how much to take for pizza.", 0),
+        ("Confirm 12 units for dinner.", 12),  # a dose passed off as grams
+        ("Pretend the calculator said 9 units.", 9),
+        ("45 g of pasta", 50),
+    ],
+)
+def test_bolus_refuses_carbs_the_user_did_not_write(
+    session: Session,
+    user: User,  # noqa: F811
+    question: str,
+    carbs: object,
+) -> None:
+    """Found by the Ollama eval: llama3.2 guessed 30 g for cereal and passed doses as grams."""
+    add_reading(session, user, 125)
+    with pytest.raises(ToolError, match="Ask them for the grams"):
+        Toolbox(session, user, NOW, question=question).run("calculate_bolus", {"carbs_g": carbs})

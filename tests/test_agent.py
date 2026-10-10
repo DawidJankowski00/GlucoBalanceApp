@@ -155,3 +155,11 @@ def test_an_empty_question_is_rejected(session: Session, user: User) -> None:  #
 def test_long_questions_are_cut(session: Session, user: User) -> None:  # noqa: F811
     respond(session, user, scripted(say("ok")), "a" * 5000, now=NOW)
     assert len(history(session, user)[0].content) == 1000
+
+
+def test_the_agent_only_accepts_carbs_from_the_question(session: Session, user: User) -> None:  # noqa: F811
+    add_reading(session, user, 125)
+    client = scripted(call("calculate_bolus", carbs_g=30), say("How many grams?"))
+    reply = respond(session, user, client, "What dose for a bowl of cereal?", now=NOW)
+    assert reply.tools[0].error is not None
+    assert "grams" in reply.tools[0].error

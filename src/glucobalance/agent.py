@@ -26,7 +26,7 @@ from sqlalchemy.orm import Session
 from glucobalance.assistant_tools import TOOLS, Toolbox, ToolError
 from glucobalance.llm import LLMClient, LLMError, Message
 from glucobalance.models import AssistantMessage, MessageRole, User
-from glucobalance.output_check import check_reply, numbers_in
+from glucobalance.output_check import Kind, allowed_numbers, check_reply, merge
 
 MAX_STEPS = 6
 MEMORY_MESSAGES = 20
@@ -127,14 +127,14 @@ def respond(
     question = question.strip()[:MAX_QUESTION_CHARS]
     if not question:
         raise ValueError("Ask a question first.")
-    toolbox = Toolbox(session, user, now)
+    toolbox = Toolbox(session, user, now, question=question)
     messages: list[Message] = [
         Message(role=row.role.value, content=row.content) for row in history(session, user)
     ]
     messages.append(Message(role="user", content=question))
 
     traces: list[ToolTrace] = []
-    allowed: set[Decimal] = set()
+    allowed: dict[Kind, set[Decimal]] = {}
     final: str | None = None
     for _ in range(MAX_STEPS):
         response = client.chat(_system_prompt(toolbox), messages, TOOLS)
@@ -148,7 +148,7 @@ def respond(
             try:
                 result = toolbox.run(call.name, call.arguments)
                 trace = ToolTrace(call.name, call.arguments, result)
-                allowed |= numbers_in(result)
+                merge(allowed, allowed_numbers(result))
             except ToolError as error:
                 result = {"error": str(error)}
                 trace = ToolTrace(call.name, call.arguments, result, error=str(error))
