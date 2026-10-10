@@ -243,6 +243,28 @@ class SiteRepository(Repository[BodySite]):
         )
         return {code: count for code, count in rows}
 
+    def uses_between(
+        self, user_id: int, start: datetime, end: datetime
+    ) -> list[tuple[str, datetime]]:
+        """``(site code, used_at)`` for insulin delivery in ``[start, end)``, oldest first.
+
+        Sensor placements are left out: a sensor does not deliver insulin, so it says nothing
+        about how a site affects glucose.
+        """
+        _check_range(start, end)
+        rows = self.session.execute(
+            select(BodySite.code, SiteUse.used_at)
+            .join(SiteUse.site)
+            .where(
+                SiteUse.user_id == user_id,
+                SiteUse.used_at >= start,
+                SiteUse.used_at < end,
+                SiteUse.purpose != SitePurpose.CGM_SENSOR,
+            )
+            .order_by(SiteUse.used_at, SiteUse.id)
+        )
+        return [(code, used_at) for code, used_at in rows]
+
     def active_blocks(self, user_id: int, now: datetime) -> Sequence[SiteBlock]:
         """Blocks in force at ``now`` (started, and not yet ended), ordered by site code."""
         return self.session.scalars(
