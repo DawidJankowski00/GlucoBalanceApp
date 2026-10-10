@@ -8,7 +8,7 @@ It is also a portfolio project: it is meant to show backend engineering, AI engi
 
 ## Project status
 
-**Early development. Stages 0 to 5 are built:** project tooling, Docker and CI; the database layer; accounts with an onboarding wizard, feature flags for the pump/pens and glucometer/CGM choices and a settings page with a change history; glucose, insulin and carb entry, a Today timeline, charts, a logbook with CSV export, food search, favourite meals and a hypo log; site rotation with a clickable body map; and reminders (every N days, daily, after an event, quiet hours, snooze) delivered in the app and as Web Push notifications. There is no CGM import or AI assistant yet. The sections below describe what is planned. Development happens in small stages (see [Roadmap](#roadmap)), and this README is updated as each one lands.
+**Early development. Stages 0 to 7 are built:** project tooling, Docker and CI; the database layer; accounts with an onboarding wizard, feature flags for the pump/pens and glucometer/CGM choices and a settings page with a change history; glucose, insulin and carb entry, a Today timeline, charts, a logbook with CSV export, food search, favourite meals and a hypo log; site rotation with a clickable body map; and reminders (every N days, daily, after an event, quiet hours, snooze) delivered in the app and as Web Push notifications. CGM readings can be imported through LibreLinkUp or a simulator, and the Reports page shows time in range, the glucose profile, detected patterns and a PDF report for your clinic. There is no AI assistant yet. The sections below describe what is planned. Development happens in small stages (see [Roadmap](#roadmap)), and this README is updated as each one lands.
 
 ## Planned features
 
@@ -83,7 +83,7 @@ Each stage ends with something that can be demonstrated.
 - [x] **Stage 4: Site rotation engine.** Next-site suggestions for pump and pens, blocked sites, body map.
 - [x] **Stage 5: Reminders and notifications.** Scheduled reminders and Web Push.
 - [x] **Stage 6: CGM integration.** LibreLinkUp client and simulator source.
-- [ ] **Stage 7: Analytics and reports.** Time in range, glucose profile, pattern detection, PDF report.
+- [x] **Stage 7: Analytics and reports.** Time in range, glucose profile, pattern detection, PDF report.
 - [ ] **Stage 8: AI assistant, deterministic core.** Bolus calculator, insulin on board, capped suggestions.
 - [ ] **Stage 9: AI assistant, LLM agent.** Tool-calling agent, guardrails, evaluation suite.
 - [ ] **Stage 10: Forecast model (optional).** 30-minute glucose prediction with honest error reporting.

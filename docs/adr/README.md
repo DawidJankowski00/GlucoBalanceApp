@@ -21,3 +21,4 @@ Use [0000-template.md](0000-template.md) as a starting point.
 | [0013](0013-web-push-and-notification-centre.md) | Web Push with VAPID keys, and an in-app notification centre as the fallback |
 | [0014](0014-librelinkup-behind-a-cgm-source.md) | LibreLinkUp behind a CGM source interface, with a simulator for demos and tests |
 | [0015](0015-cgm-polling-secrets-and-live-alerts.md) | CGM polling with backoff, encrypted follower secrets, and one alert per episode |
+| [0016](0016-analytics-thresholds-and-pdf-report.md) | Consensus thresholds, rule-based patterns and a pure-Python PDF report |

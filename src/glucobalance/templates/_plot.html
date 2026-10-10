@@ -1,0 +1,20 @@
+<script id="{{ plot_id }}-data" type="application/json">{{ figure|tojson }}</script>
+<script>
+  (function () {
+    var figure = JSON.parse(document.getElementById("{{ plot_id }}-data").textContent);
+    var PLOTLY = "https://cdn.jsdelivr.net/npm/plotly.js-basic-dist-min@2.35.2/plotly-basic.min.js";
+    function draw() {
+      Plotly.newPlot("{{ plot_id }}", figure.data, figure.layout, {responsive: true, displayModeBar: false});
+    }
+    if (window.Plotly) { draw(); return; }
+    // Pages are swapped in by HTMX, so the library is loaded once, on demand, not in <head>.
+    var tag = document.getElementById("plotly-lib");
+    if (!tag) {
+      tag = document.createElement("script");
+      tag.id = "plotly-lib";
+      tag.src = PLOTLY;
+      document.head.appendChild(tag);
+    }
+    tag.addEventListener("load", draw);
+  })();
+</script>

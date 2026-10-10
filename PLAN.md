@@ -75,6 +75,13 @@ The owner wants to build the app in segments and fully understand every one. Fol
 | `src/glucobalance/scheduler.py` | APScheduler with a database job store; one job runs `fire_due_reminders()` every minute and then pushes. Started by the app's lifespan. |
 | `src/glucobalance/push.py`, `web/push.py`, `static/sw.js`, `templates/_push.html` | Web Push: subscriptions, VAPID keys (`python -m glucobalance.push`), sending with `pywebpush`, the service worker and the turn-on button (ADR 0013). |
 | `tests/test_reminder_rules.py`, `test_reminder_service.py`, `test_web_reminders.py`, `test_scheduler.py`, `test_push.py`, `test_web_push.py` | Stage 5 tests. |
+| `src/glucobalance/stats.py` | `compute_stats()` (time in range bands, mean, SD, CV, GMI, CGM coverage, data warnings), `low_episodes()` and `time_of_day_averages()` (ADR 0016). |
+| `src/glucobalance/agp.py` | `percentile()`, `agp_profile()` (15-minute percentile buckets on the local clock) and `agp_figure()`. |
+| `src/glucobalance/patterns.py` | Rule-based detectors with named thresholds: night lows, post-breakfast highs, high fasting values; each `Finding` carries its supporting readings. |
+| `src/glucobalance/site_performance.py` | Mean glucose 2 to 6 hours after each site use, compared with the overall mean, with a flag for sites well above it. |
+| `src/glucobalance/analytics_service.py`, `web/analytics.py`, `templates/analytics.html` | `build_analytics()` gathers one period for the `/analytics` page and the PDF; `/analytics?days=14|30` and `/report.pdf`. |
+| `src/glucobalance/report.py` | The PDF clinic report, drawn with fpdf2 (summary, AGP, patterns, sites). |
+| `tests/test_stats.py`, `test_agp.py`, `test_patterns.py`, `test_site_performance.py`, `test_report.py`, `test_web_analytics.py` | Stage 7 tests. |
 | `.pre-commit-config.yaml` | Local hooks (ruff check --fix, ruff format, mypy) run through `uv run`, so they use `.venv` and the versions in `uv.lock`. |
 
 **Already done:**
@@ -83,7 +90,7 @@ The owner wants to build the app in segments and fully understand every one. Fol
 - README and `.gitignore`.
 - Python tooling: uv, ruff (lint + format), mypy strict and pytest are configured and all run clean; pre-commit runs ruff and mypy on every commit.
 
-**Not done yet** (still planned): Stage 6 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms, a Today timeline, daily and weekly charts (Plotly, ADR 0007) and a filterable logbook with CSV export followed, then food search, favourite meals and a hypo log (ADR 0008). Stage 4 added the body map (ADR 0009), the site ranking written by the owner, pump and pen rotations with blocked sites and preferences (ADR 0010), a clickable SVG body map with a heatmap (ADR 0011) and Hypothesis property tests. Stage 5 added reminders with every-N-days, daily and after-event rules, quiet hours, snooze and done (ADR 0012), an APScheduler job with a database job store, an in-app notification centre and Web Push with VAPID keys (ADR 0013). There is no AI code yet.
+**Not done yet** (still planned): Stage 8 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms, a Today timeline, daily and weekly charts (Plotly, ADR 0007) and a filterable logbook with CSV export followed, then food search, favourite meals and a hypo log (ADR 0008). Stage 4 added the body map (ADR 0009), the site ranking written by the owner, pump and pen rotations with blocked sites and preferences (ADR 0010), a clickable SVG body map with a heatmap (ADR 0011) and Hypothesis property tests. Stage 5 added reminders with every-N-days, daily and after-event rules, quiet hours, snooze and done (ADR 0012), an APScheduler job with a database job store, an in-app notification centre and Web Push with VAPID keys (ADR 0013). Stage 6 added the CGM source interface, the LibreLinkUp client and simulator source, polling with backoff and live alerts (ADRs 0014 and 0015). Stage 7 added time-in-range statistics, the AGP, rule-based pattern detectors, a site-performance table and a PDF clinic report (ADR 0016). There is no AI code yet.
 
 Python is pinned to 3.12 with `.python-version` (ADR 0003), matching CI and Docker; simglucose does not work on 3.14.
 
@@ -133,7 +140,7 @@ A Python web app (installable on a phone as a PWA) that logs glucose and insulin
 | Quality | pytest, hypothesis, ruff, mypy, pre-commit |
 | CI / packaging | GitHub Actions, Docker Compose |
 
-Charts use Plotly.js from a CDN (no Python package). Installed so far: ruff, mypy, pytest, pre-commit, FastAPI, uvicorn, pydantic-settings, SQLAlchemy, Alembic, psycopg, argon2-cffi, Jinja2, python-multipart, itsdangerous, tzdata (time zone data for Windows), httpx (dev, for tests) and simglucose (optional `sim` group). Add the others in the stage that first needs them, and explain each one when it is introduced.
+Charts use Plotly.js from a CDN (no Python package). Installed so far: fpdf2 (PDF reports), ruff, mypy, pytest, pre-commit, FastAPI, uvicorn, pydantic-settings, SQLAlchemy, Alembic, psycopg, argon2-cffi, Jinja2, python-multipart, itsdangerous, tzdata (time zone data for Windows), httpx (dev, for tests) and simglucose (optional `sim` group). Add the others in the stage that first needs them, and explain each one when it is introduced.
 
 ### Architecture
 
@@ -293,15 +300,15 @@ Done when Libre readings flow in automatically through LibreLinkUp, with the sim
 - [x] Store the follower password encrypted (Fernet key in an env variable); never log it
 - [x] ADR with the risk note (unofficial interface, encrypted v5, terms of service)
 
-### Stage 7: Analytics and reports
+### Stage 7: Analytics and reports (done)
 
 Done when a user can see their patterns and print a report for their diabetes clinic.
 
-- [ ] Time in range, below range, above range, mean, coefficient of variation, glucose management indicator
-- [ ] Ambulatory glucose profile (percentile bands across a typical day)
-- [ ] Rule-based pattern detectors: repeated night lows, post-breakfast highs, high fasting values
-- [ ] Site-performance view: average glucose after each site, to spot overused areas
-- [ ] PDF clinic report for 14 or 30 days
+- [x] Time in range, below range, above range, mean, coefficient of variation, glucose management indicator
+- [x] Ambulatory glucose profile (percentile bands across a typical day)
+- [x] Rule-based pattern detectors: repeated night lows, post-breakfast highs, high fasting values
+- [x] Site-performance view: average glucose after each site, to spot overused areas
+- [x] PDF clinic report for 14 or 30 days
 
 ### Stage 8: AI assistant, deterministic core
 

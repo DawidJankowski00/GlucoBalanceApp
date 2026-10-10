@@ -42,6 +42,13 @@ Plain-language definitions of the diabetes terms used in GlucoBalanceApp. This i
 - **Polling and backoff:** asking the server for new readings every few minutes, and waiting longer after each failure (and at least 5 minutes after "too many requests") so the account is not blocked.
 - **Fernet:** symmetric, authenticated encryption from the `cryptography` package. GBA uses it to store the LibreLinkUp password; the key lives only in an environment variable.
 - **Simulator source:** a pretend CGM that replays a simulated day, used for demos and tests.
+- **Time in range (TIR) bands:** the share of readings in range, below range (under your low limit) and above range (over your high limit). *Very low* (under 54 mg/dL) and *very high* (over 250 mg/dL) are counted inside below and above.
+- **Coefficient of variation (CV):** how much glucose swings, as the standard deviation divided by the mean. 36% or lower is the usual goal for stable glucose.
+- **GMI (glucose management indicator):** an estimate of HbA1c from the mean CGM glucose: `3.31 + 0.02392 × mean mg/dL`. It can differ from a lab HbA1c.
+- **Percentile:** the value below which a given share of readings fall. The median is the 50th percentile; the 5th and 95th mark the edges of nine in ten readings.
+- **Sensor coverage:** the share of 15-minute slots in a period that have a CGM reading. At least 70% over 14 days is needed for reliable statistics.
+- **Low episode:** one stretch of low readings. Lows within an hour of each other count as one episode.
+- **Lipohypertrophy:** a lump of fatty tissue under the skin from using the same site too often. Insulin is absorbed unevenly there, which can show up as higher glucose after using that site.
 - **Notification centre:** the Alerts page in the app. Every reminder lands here first, so nothing is lost if a phone push fails.
 
 ## The bolus formula used in GBA

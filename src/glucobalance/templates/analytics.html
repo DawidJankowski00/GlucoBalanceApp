@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Reports · {{ app_name }}{% endblock %}
+{% block content %}
+{% set s = data.stats %}
+<div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+  <div>
+    <h1 class="text-2xl font-semibold">Reports</h1>
+    <p class="text-sm text-slate-600">{{ data.first_day.strftime("%d %b") }} to {{ data.last_day.strftime("%d %b %Y") }}</p>
+  </div>
+  <div class="flex items-center gap-3 text-sm">
+    <div class="flex gap-1" role="group" aria-label="Period">
+      {% for choice in choices %}
+      <a href="/analytics?days={{ choice }}" class="{% if loop.first %}rounded-l{% elif loop.last %}rounded-r{% endif %} border px-3 py-1 {% if choice == data.days %}border-teal-700 bg-teal-700 text-white{% else %}border-slate-300 bg-white{% endif %}">{{ choice }} days</a>
+      {% endfor %}
+    </div>
+    <a href="/report.pdf?days={{ data.days }}" hx-boost="false" class="rounded bg-teal-700 px-3 py-1 text-white hover:bg-teal-800">PDF report</a>
+  </div>
+</div>
+
+{% if not s %}
+<p class="rounded border border-slate-200 bg-white p-4 text-slate-700">No glucose readings in this period yet. <a class="text-teal-700 underline" href="/log/glucose">Log a reading</a> to see your statistics.</p>
+{% else %}
+{% if s.warning %}
+<p class="mb-3 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" role="status">{{ s.warning }}</p>
+{% endif %}
+
+<section class="mb-4 rounded border border-slate-200 bg-white p-4" aria-labelledby="tir-heading">
+  <h2 id="tir-heading" class="mb-2 font-semibold">Time in range</h2>
+  <div class="flex h-6 overflow-hidden rounded" role="img" aria-label="{{ '%.0f' % s.in_range }}% in range, {{ '%.0f' % s.below }}% below, {{ '%.0f' % s.above }}% above">
+    {% for width, colour in [(s.very_low, 'bg-red-900'), (s.below - s.very_low, 'bg-red-500'), (s.in_range, 'bg-green-600'), (s.above - s.very_high, 'bg-amber-500'), (s.very_high, 'bg-orange-700')] %}
+    {% if width > 0 %}<div class="{{ colour }}" style="width: {{ width }}%"></div>{% endif %}
+    {% endfor %}
+  </div>
+  <dl class="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-5">
+    <div><dt class="text-slate-500">Very low (&lt; {{ shown(54) }})</dt><dd class="font-semibold">{{ '%.1f' % s.very_low }}%</dd></div>
+    <div><dt class="text-slate-500">Below ({{ shown(data.low) }})</dt><dd class="font-semibold">{{ '%.1f' % s.below }}%</dd></div>
+    <div><dt class="text-slate-500">In range</dt><dd class="font-semibold text-green-700">{{ '%.1f' % s.in_range }}%</dd></div>
+    <div><dt class="text-slate-500">Above ({{ shown(data.high) }})</dt><dd class="font-semibold">{{ '%.1f' % s.above }}%</dd></div>
+    <div><dt class="text-slate-500">Very high (&gt; {{ shown(250) }})</dt><dd class="font-semibold">{{ '%.1f' % s.very_high }}%</dd></div>
+  </dl>
+  <p class="mt-2 text-xs text-slate-500">Values in {{ data.unit }}. Very low and very high are counted inside below and above.</p>
+</section>
+
+<section class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Summary">
+  <div class="rounded border border-slate-200 bg-white p-3"><p class="text-xs text-slate-500">Mean glucose</p><p class="text-xl font-semibold">{{ shown(s.mean) }} <span class="text-sm font-normal">{{ data.unit }}</span></p></div>
+  <div class="rounded border border-slate-200 bg-white p-3"><p class="text-xs text-slate-500">Variability (CV)</p><p class="text-xl font-semibold">{{ '%.1f' % s.cv }}%</p><p class="text-xs text-slate-500">target 36% or lower</p></div>
+  <div class="rounded border border-slate-200 bg-white p-3"><p class="text-xs text-slate-500">GMI</p><p class="text-xl font-semibold">{{ '%.1f' % s.gmi }}%</p><p class="text-xs text-slate-500">estimated HbA1c</p></div>
+  <div class="rounded border border-slate-200 bg-white p-3"><p class="text-xs text-slate-500">Low episodes</p><p class="text-xl font-semibold">{{ data.low_episodes }}</p><p class="text-xs text-slate-500">{{ s.count }} readings{% if s.coverage is not none %}, {{ '%.0f' % s.coverage }}% coverage{% endif %}</p></div>
+</section>
+
+<section class="mb-4 rounded border border-slate-200 bg-white p-4">
+  {% if figure %}
+  <h2 class="mb-2 font-semibold">Ambulatory glucose profile</h2>
+  <div id="agp" role="img" aria-label="Ambulatory glucose profile: median and percentile bands over a typical day"></div>
+  <p class="mt-2 text-xs text-slate-500">All days folded onto one 24-hour clock. The line is the median, the dark band holds the middle half of days and the light band nine in ten. The pale band is your target range.</p>
+  {% set plot_id = "agp" %}
+  {% include "_plot.html" %}
+  {% else %}
+  <h2 class="mb-2 font-semibold">Average by time of day</h2>
+  <table class="w-full text-sm">
+    <tbody>
+      {% for period in data.periods %}
+      <tr class="border-t border-slate-100"><th scope="row" class="py-1 text-left font-normal">{{ period.name }}</th><td>{% if period.mean is not none %}{{ shown(period.mean) }} {{ data.unit }}{% else %}<span class="text-slate-400">no readings</span>{% endif %}</td><td class="text-right text-slate-500">{{ period.count }} readings</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="mb-4 rounded border border-slate-200 bg-white p-4" aria-labelledby="patterns-heading">
+  <h2 id="patterns-heading" class="mb-2 font-semibold">Patterns</h2>
+  {% for finding in data.findings %}
+  <div class="mb-3">
+    <h3 class="font-medium">{{ finding.title }}</h3>
+    <p class="text-sm">{{ finding.detail }}</p>
+    <p class="text-xs text-slate-500">Typical value: {{ shown(finding.headline_mgdl) }} {{ data.unit }}.
+      Examples: {% for e in finding.evidence[:5] %}{{ e.measured_at.astimezone(data.zone).strftime("%d %b %H:%M") }} ({{ shown(e.value_mgdl) }}){% if not loop.last %}, {% endif %}{% endfor %}</p>
+  </div>
+  {% else %}
+  <p class="text-sm text-slate-600">No patterns were found in this period.</p>
+  {% endfor %}
+  <p class="text-xs text-slate-500">These are fixed rules applied to your readings, not medical advice. Share them with your diabetes team.</p>
+</section>
+
+{% if data.sites %}
+<section class="mb-4 rounded border border-slate-200 bg-white p-4" aria-labelledby="sites-heading">
+  <h2 id="sites-heading" class="mb-2 font-semibold">Glucose after each site</h2>
+  <table class="w-full text-sm">
+    <thead><tr class="text-left text-slate-500"><th class="font-normal">Site</th><th class="font-normal">Uses</th><th class="font-normal">Mean 2 to 6 h later</th><th class="font-normal">Against overall</th></tr></thead>
+    <tbody>
+      {% for row in data.sites %}
+      <tr class="border-t border-slate-100 {% if row.flagged %}bg-amber-50{% endif %}">
+        <td class="py-1">{{ site_label(row.code) }}</td>
+        <td>{{ row.uses }}</td>
+        <td>{{ shown(row.mean_mgdl) }} {{ data.unit }}</td>
+        <td>{{ "+" if row.difference_mgdl >= 0 else "-" }}{{ shown(row.difference_mgdl|abs) }}{% if row.flagged %} <span class="text-amber-800">above average</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="mt-2 text-xs text-slate-500">A site that is often followed by higher glucose may be overused. Rest it and talk to your diabetes team. <a class="text-teal-700 underline" href="/sites">See the body map</a>.</p>
+</section>
+{% endif %}
+
+<p class="text-xs text-slate-500">GlucoBalance is not a medical device. The statistics follow the international CGM consensus (see ADR 0016).</p>
+{% endblock %}
