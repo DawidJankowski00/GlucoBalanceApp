@@ -14,6 +14,7 @@ from glucobalance.cgm_service import CGMRuntime
 from glucobalance.config import Settings, get_settings
 from glucobalance.db import make_engine, make_session_factory
 from glucobalance.foods import CachedFoodSource, FoodSource, OpenFoodFacts
+from glucobalance.forecast.models import Forecaster, load_forecaster
 from glucobalance.llm import LLMClient, build_llm
 from glucobalance.push import PushSender, WebPushSender
 from glucobalance.scheduler import build_scheduler
@@ -47,9 +48,11 @@ def create_app(
     push_sender: PushSender | None = None,
     cgm_http: httpx.Client | None = None,
     llm: LLMClient | None = None,
+    forecaster: Forecaster | None = None,
 ) -> FastAPI:
     """Build the app. Tests can pass their own settings, database engine and food source,
-    an HTTP client for the CGM servers (respx-mocked) and the assistant's LLM client."""
+    an HTTP client for the CGM servers (respx-mocked), the assistant's LLM client and the
+    glucose forecaster."""
     settings = settings or get_settings()
     engine = engine or make_engine(settings.database_url)
     session_factory = make_session_factory(engine)
@@ -84,6 +87,7 @@ def create_app(
     app.state.cgm_runtime = cgm_runtime
     app.state.settings = settings
     app.state.llm = llm
+    app.state.forecaster = forecaster or load_forecaster(settings.forecast_model_path)
 
     # The login is a signed cookie holding only the user id. Lax SameSite stops other sites
     # from making the browser send it on a form POST; HTTPS-only outside development.

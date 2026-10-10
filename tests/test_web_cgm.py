@@ -212,3 +212,29 @@ def test_sparkline_maps_values_into_the_box() -> None:
     spark = sparkline(readings, start, end, low=70, high=180)
     assert spark["points"] == "0.0,80.0 300.0,0.0"  # 400 is clamped to the top
     assert spark["band_top"] == pytest.approx(36.9, abs=0.1)
+
+
+def test_live_view_warns_of_a_likely_low_without_showing_a_number(
+    client: TestClient, engine: Engine
+) -> None:
+    cgm_user(client)
+    client.post("/settings/cgm/simulator", data={"enabled": "on"})
+    session, user = saved_user(engine)
+    now = datetime.now(UTC)
+    for i, value in enumerate((92, 100, 108, 116, 124, 132, 140)):  # newest first
+        session.add(
+            GlucoseReading(
+                user_id=user.id,
+                measured_at=now - timedelta(minutes=1 + 5 * i),
+                value_mgdl=value,
+                source=ReadingSource.SIMULATED,
+            )
+        )
+    session.commit()
+    session.close()
+
+    page = client.get("/live").text
+    assert "Likely low soon" in page
+    assert "do not dose from it" in page
+    assert "44" not in page  # the linear trend predicts 44 mg/dL; the number is never shown
+    assert "Likely low soon" in client.get("/live/panel").text

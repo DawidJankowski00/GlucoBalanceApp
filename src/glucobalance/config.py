@@ -49,6 +49,11 @@ class Settings(BaseSettings):
     anthropic_api_key: str | None = None
     anthropic_model: str = "claude-haiku-5-5"
 
+    # The glucose forecast (Stage 10). A model file made by ``python -m glucobalance.forecast``;
+    # without one the "likely low soon" warning uses the linear trend baseline. The file is a
+    # pickle, so only point this at a model you trained yourself.
+    forecast_model_path: str | None = None
+
     @property
     def run_scheduler(self) -> bool:
         if self.scheduler_enabled is None:

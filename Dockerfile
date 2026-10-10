@@ -18,6 +18,11 @@ COPY migrations ./migrations
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
 
+# Train the glucose forecast on synthetic patients (seconds), so the image ships the model.
+# The report goes to /tmp: the one in docs/forecast/ is the reviewed copy.
+RUN python -m glucobalance.forecast --model-out /app/models/forecast.joblib --report /tmp/forecast-report.md
+ENV GBA_FORECAST_MODEL_PATH=/app/models/forecast.joblib
+
 EXPOSE 8000
 # Bring the database schema up to date, then start the app
 CMD ["sh", "-c", "alembic upgrade head && uvicorn glucobalance.main:app --host 0.0.0.0 --port 8000"]

@@ -51,6 +51,9 @@ secrets.json
 *.db-journal
 instance/
 
+# Trained models: make them with `uv run python -m glucobalance.forecast`
+models/
+
 # Logs
 *.log
 logs/
