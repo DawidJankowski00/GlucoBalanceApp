@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Assistant · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+  <h1 class="text-2xl font-semibold">Assistant</h1>
+  <div class="flex items-center gap-3 text-sm">
+    <a href="/assistant/review" class="rounded border border-teal-700 px-3 py-1 text-teal-800">Weekly review</a>
+    {% if messages %}
+    <form method="post" action="/assistant/clear">
+      <button class="rounded border border-slate-300 px-3 py-1">Clear conversation</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+<p class="mb-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" role="note">
+  The assistant is not medical advice. It reads your data through the app's tools, and a dose can only come from the app's tested calculator: a reply with a number the calculator did not give is blocked. Check every dose and change with your diabetes team.
+</p>
+
+{% if not enabled %}
+<p class="rounded border border-slate-200 bg-white p-4 text-slate-700">The assistant is not set up on this server. Set <code>GBA_LLM_PROVIDER</code> to <code>ollama</code> or <code>claude</code> (see <code>.env.example</code>).</p>
+{% else %}
+<ol class="mb-4 space-y-3" aria-label="Conversation">
+  {% for m in messages %}
+  <li {% if loop.last %}id="latest"{% endif %} class="rounded p-3 {% if m.role.value == 'user' %}ml-8 bg-teal-50{% elif m.blocked %}mr-8 border border-red-300 bg-red-50{% else %}mr-8 border border-slate-200 bg-white{% endif %}">
+    <p class="mb-1 text-xs text-slate-500">{{ 'You' if m.role.value == 'user' else 'Assistant' }}{% if m.blocked %} · blocked by the safety check{% endif %}</p>
+    <p class="whitespace-pre-line">{{ m.content }}</p>
+  </li>
+  {% else %}
+  <li class="text-sm text-slate-500">Ask about your recent glucose, your patterns or your settings, or say how many grams of carbs you are about to eat.</li>
+  {% endfor %}
+</ol>
+<form method="post" action="/assistant" class="flex gap-2" hx-disabled-elt="find button">
+  <label class="sr-only" for="question">Your question</label>
+  <input id="question" name="question" maxlength="1000" required autocomplete="off" class="flex-1 rounded border border-slate-300 px-3 py-2" placeholder="For example: how much for 45 g of pasta?">
+  <button class="rounded bg-teal-700 px-4 py-2 text-white hover:bg-teal-800">Send</button>
+</form>
+<p class="mt-2 text-xs text-slate-500">Model: {{ model }}</p>
+{% endif %}
+{% endblock %}

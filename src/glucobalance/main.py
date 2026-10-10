@@ -14,10 +14,12 @@ from glucobalance.cgm_service import CGMRuntime
 from glucobalance.config import Settings, get_settings
 from glucobalance.db import make_engine, make_session_factory
 from glucobalance.foods import CachedFoodSource, FoodSource, OpenFoodFacts
+from glucobalance.llm import LLMClient, build_llm
 from glucobalance.push import PushSender, WebPushSender
 from glucobalance.scheduler import build_scheduler
 from glucobalance.web import (
     analytics,
+    assistant,
     auth,
     cgm,
     chart_page,
@@ -44,9 +46,10 @@ def create_app(
     food_source: FoodSource | None = None,
     push_sender: PushSender | None = None,
     cgm_http: httpx.Client | None = None,
+    llm: LLMClient | None = None,
 ) -> FastAPI:
     """Build the app. Tests can pass their own settings, database engine and food source,
-    and an HTTP client for the CGM servers (respx-mocked)."""
+    an HTTP client for the CGM servers (respx-mocked) and the assistant's LLM client."""
     settings = settings or get_settings()
     engine = engine or make_engine(settings.database_url)
     session_factory = make_session_factory(engine)
@@ -54,6 +57,9 @@ def create_app(
         assert settings.vapid_private_key is not None
         push_sender = WebPushSender(settings.vapid_private_key, settings.vapid_contact)
     cgm_runtime = CGMRuntime(http=cgm_http or httpx.Client(), box=_secret_box(settings))
+    llm_http = httpx.Client() if llm is None and settings.llm_provider != "none" else None
+    if llm_http is not None:
+        llm = build_llm(settings, llm_http)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -69,12 +75,15 @@ def create_app(
                 app.state.scheduler.shutdown(wait=False)
             if cgm_http is None:
                 cgm_runtime.http.close()
+            if llm_http is not None:
+                llm_http.close()
 
     app = FastAPI(title=settings.app_name, debug=settings.debug, lifespan=lifespan)
     app.state.scheduler = None
     app.state.push_sender = push_sender
     app.state.cgm_runtime = cgm_runtime
     app.state.settings = settings
+    app.state.llm = llm
 
     # The login is a signed cookie holding only the user id. Lax SameSite stops other sites
     # from making the browser send it on a form POST; HTTPS-only outside development.
@@ -104,6 +113,7 @@ def create_app(
     app.include_router(reminders.router)
     app.include_router(push.router)
     app.include_router(cgm.router)
+    app.include_router(assistant.router)
 
     @app.get("/health")
     def health() -> dict[str, str]:
