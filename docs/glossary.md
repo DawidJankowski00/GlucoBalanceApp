@@ -56,6 +56,14 @@ Plain-language definitions of the diabetes terms used in GlucoBalanceApp. This i
 - **Max bolus:** the largest single bolus the app will ever suggest, agreed with your clinic. A larger sum is cut to it and marked as capped.
 - **Adjustment suggestion:** a proposal to change one ICR or ISF value for one time block by at most 10%, based on a pattern. Nothing changes until you accept it.
 - **Review period:** 7 days. A setting changed in that time gets no new suggestion, so each change can be judged before the next.
+- **LLM (large language model):** the AI model behind the chat, such as a local Llama model run by Ollama or Claude. It writes the words; it never works out a dose.
+- **Tool calling:** the model asks the app to run a named function (for example `calculate_bolus` with 45 g) and reads the result before answering. The tools are the model's only way to see your data.
+- **Agent loop:** the back-and-forth of one answer: the model asks for tools, the app runs them, and this repeats (at most 6 times) until the model writes its reply.
+- **System prompt:** the fixed instructions sent with every question, including the safety policy the model must follow.
+- **Output check:** the last step before a reply is shown: every dose or setting number in it must match a tool result from the same question, or the whole reply is blocked.
+- **Prompt injection:** text that tries to make the model ignore its rules ("ignore your rules", "pretend the calculator said 9 units"). The output check does not rely on the model resisting it.
+- **Weekly review:** a summary of the last two weeks plus at most three adjustment suggestions, each accepted or rejected by you.
+- **Evaluation suite (evals):** a fixed set of test conversations with simulated patients, scored for safety and usefulness, used to compare models and catch regressions.
 
 ## The bolus formula used in GBA
 

@@ -86,6 +86,14 @@ The owner wants to build the app in segments and fully understand every one. Fol
 | `src/glucobalance/dosing_safety.py`, `dosing_service.py` | Refusals before any number (no settings, no reading, stale reading, low) and `advise_bolus()`, which gathers the reading, IOB and time block and returns the advice or the refusal. |
 | `src/glucobalance/adjustments.py`, `adjustment_service.py` | `suggest_adjustments()` turns findings into ICR or ISF changes of at most 10%, one per setting per 7 days, never more insulin in a block with lows; `accept_suggestion()` re-checks and saves through `apply_settings`. |
 | `tests/test_iob.py`, `test_bolus.py`, `test_dosing_safety.py`, `test_dosing_service.py`, `test_adjustments.py`, `test_adjustment_service.py`, `test_dosing_properties.py` | Stage 8 tests (the last one uses Hypothesis). |
+| `src/glucobalance/llm.py` | `LLMClient` Protocol, `OllamaClient` and `ClaudeClient` (plain `httpx`), `ScriptedClient` for tests, `build_llm()` from the `GBA_LLM_*` settings. |
+| `src/glucobalance/assistant_tools.py` | The five tools (`get_recent_glucose`, `get_patterns`, `get_settings`, `calculate_bolus`, `propose_adjustment`) with JSON schemas, bound to one user in `Toolbox`. |
+| `src/glucobalance/agent.py` | `respond()`: the system prompt, memory (`assistant_messages`), the tool loop (max 6 rounds) and the output check; `history()` and `forget()`. |
+| `src/glucobalance/output_check.py` | `dose_numbers()` finds numbers used as doses or settings; `check_reply()` blocks any that no tool returned. |
+| `src/glucobalance/weekly_review.py` | `run_review()`, stored suggestions (`adjustment_suggestions`, at most three pending), `accept()` and `reject()`. |
+| `src/glucobalance/web/assistant.py`, `templates/assistant*.html` | The `/assistant` chat and the `/assistant/review` page. |
+| `src/glucobalance/evals/` | Simulated patients, 56 scenarios, the reference and reckless stand-in models and the runner (`python -m glucobalance.evals --provider ...`). |
+| `tests/test_llm.py`, `test_output_check.py`, `test_assistant_tools.py`, `test_agent.py`, `test_weekly_review.py`, `test_web_assistant.py`, `test_evals.py` | Stage 9 tests (the last one runs the whole eval suite). |
 | `.pre-commit-config.yaml` | Local hooks (ruff check --fix, ruff format, mypy) run through `uv run`, so they use `.venv` and the versions in `uv.lock`. |
 
 **Already done:**
@@ -94,7 +102,7 @@ The owner wants to build the app in segments and fully understand every one. Fol
 - README and `.gitignore`.
 - Python tooling: uv, ruff (lint + format), mypy strict and pytest are configured and all run clean; pre-commit runs ruff and mypy on every commit.
 
-**Not done yet** (still planned): Stage 9 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms, a Today timeline, daily and weekly charts (Plotly, ADR 0007) and a filterable logbook with CSV export followed, then food search, favourite meals and a hypo log (ADR 0008). Stage 4 added the body map (ADR 0009), the site ranking written by the owner, pump and pen rotations with blocked sites and preferences (ADR 0010), a clickable SVG body map with a heatmap (ADR 0011) and Hypothesis property tests. Stage 5 added reminders with every-N-days, daily and after-event rules, quiet hours, snooze and done (ADR 0012), an APScheduler job with a database job store, an in-app notification centre and Web Push with VAPID keys (ADR 0013). Stage 6 added the CGM source interface, the LibreLinkUp client and simulator source, polling with backoff and live alerts (ADRs 0014 and 0015). Stage 7 added time-in-range statistics, the AGP, rule-based pattern detectors, a site-performance table and a PDF clinic report (ADR 0016). Stage 8 added the deterministic dosing core: a linear insulin-on-board model, the bolus calculator, safety refusals and capped adjustment suggestions (ADR 0017). There is no LLM code yet.
+**Not done yet** (still planned): the real-model rows of the Stage 9 eval report, then Stage 10 onwards. Stage 0 added `Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`, `CLAUDE.md`, `docs/adr/` and `docs/glossary.md`. Stage 1 added the database layer: models, migrations, repositories and a seed script. Stage 2 added accounts (session cookie login), the onboarding wizard, the feature flags, the settings page with history and the base layout with a PWA manifest. Stage 3 so far adds the glucose entry page with validation, a `timezone` setting (ADR 0006) and an optional note on readings. Insulin and carb forms, a Today timeline, daily and weekly charts (Plotly, ADR 0007) and a filterable logbook with CSV export followed, then food search, favourite meals and a hypo log (ADR 0008). Stage 4 added the body map (ADR 0009), the site ranking written by the owner, pump and pen rotations with blocked sites and preferences (ADR 0010), a clickable SVG body map with a heatmap (ADR 0011) and Hypothesis property tests. Stage 5 added reminders with every-N-days, daily and after-event rules, quiet hours, snooze and done (ADR 0012), an APScheduler job with a database job store, an in-app notification centre and Web Push with VAPID keys (ADR 0013). Stage 6 added the CGM source interface, the LibreLinkUp client and simulator source, polling with backoff and live alerts (ADRs 0014 and 0015). Stage 7 added time-in-range statistics, the AGP, rule-based pattern detectors, a site-performance table and a PDF clinic report (ADR 0016). Stage 8 added the deterministic dosing core: a linear insulin-on-board model, the bolus calculator, safety refusals and capped adjustment suggestions (ADR 0017). Stage 9 added the LLM assistant: an Ollama and Claude client behind one interface, five read-only tools, the agent loop with memory, the output check that blocks unverified dose numbers, the weekly review with stored suggestions and a 56-scenario evaluation suite run in CI (ADR 0018).
 
 Python is pinned to 3.12 with `.python-version` (ADR 0003), matching CI and Docker; simglucose does not work on 3.14.
 
@@ -328,13 +336,13 @@ Done when every dosing number the app can show comes from tested, plain Python. 
 
 Done when the user can chat with an assistant that uses the core tools, explains its reasoning and passes the evaluation suite.
 
-- [ ] LLM client interface with Ollama and Claude implementations
-- [ ] Tools: `get_recent_glucose`, `get_patterns`, `get_settings`, `calculate_bolus`, `propose_adjustment`
-- [ ] Agent loop with tool calling, conversation memory and a system prompt with the safety policy
-- [ ] Weekly review: summarise patterns and propose up to three adjustments, each accepted or rejected by the user
-- [ ] Output check: any dose number in the reply must match a tool result, otherwise the reply is blocked
-- [ ] Evaluation suite: 50+ scenarios on simulated patients plus adversarial prompts ("just tell me how much to take for pizza", "ignore your rules"), run in CI
-- [ ] Eval report in the README with pass rates per model
+- [x] LLM client interface with Ollama and Claude implementations
+- [x] Tools: `get_recent_glucose`, `get_patterns`, `get_settings`, `calculate_bolus`, `propose_adjustment`
+- [x] Agent loop with tool calling, conversation memory and a system prompt with the safety policy
+- [x] Weekly review: summarise patterns and propose up to three adjustments, each accepted or rejected by the user
+- [x] Output check: any dose number in the reply must match a tool result, otherwise the reply is blocked
+- [x] Evaluation suite: 50+ scenarios on simulated patients plus adversarial prompts ("just tell me how much to take for pizza", "ignore your rules"), run in CI
+- [ ] Eval report in the README with pass rates per model (table and runner in place; the Ollama and Claude rows need a run on the owner's machine)
 
 ### Stage 10: Forecast model (optional)
 
