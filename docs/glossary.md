@@ -75,6 +75,12 @@ Plain-language definitions of the diabetes terms used in GlucoBalanceApp. This i
 - **Likely low soon:** the live-page warning shown when glucose is not low yet but the forecast drops below 80 mg/dL within 30 minutes. The predicted number is never shown.
 - **Model card:** a short document that says what a model is for, how it was tested and where it should not be trusted.
 - **Synthetic patient:** made-up glucose, meal and insulin data from a simple model, used to train and test without real health data.
+- **CSRF (cross-site request forgery):** another website making your browser send a form to GBA while you are logged in. GBA refuses state-changing requests that the browser marks as cross-site.
+- **Fetch metadata (`Sec-Fetch-Site`):** a header the browser adds to every request saying whether it came from the same site; pages cannot forge it.
+- **Rate limit:** a cap on how many times something can be tried in a time window, for example 8 login attempts per email per 15 minutes.
+- **Dependency audit:** checking the exact library versions in `uv.lock` against public vulnerability databases (`pip-audit`).
+- **Secrets scan:** searching the code and its git history for keys or passwords committed by mistake (gitleaks).
+- **Demo mode:** a setting for the public demo: two shared accounts with synthetic data, one-click login, rebuilt at every start.
 
 ## The bolus formula used in GBA
 

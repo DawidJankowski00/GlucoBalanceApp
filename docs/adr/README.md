@@ -25,3 +25,4 @@ Use [0000-template.md](0000-template.md) as a starting point.
 | [0017](0017-deterministic-dosing-core.md) | Linear IOB, nearest-step bolus, safety refusals and capped suggestions |
 | [0018](0018-llm-agent-and-guardrails.md) | LLM agent: provider port over HTTP, five read-only tools, an output check and a CI eval suite |
 | [0019](0019-forecast-model-and-low-warning.md) | Glucose forecast: synthetic training data, gradient boosting against two baselines, a warning instead of a number |
+| [0020](0020-security-pass-demo-and-data-rights.md) | Security pass (fetch-metadata CSRF, rate limits, headers, CI audit), synthetic demo accounts, export and deletion |
