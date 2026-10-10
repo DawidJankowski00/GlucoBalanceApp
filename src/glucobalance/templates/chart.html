@@ -14,24 +14,6 @@
 </div>
 <div id="chart" class="rounded border border-slate-200 bg-white p-2" role="img" aria-label="Glucose chart for {{ title }}"></div>
 <p class="mt-2 text-xs text-slate-500">The shaded band is your target range. Triangles mark insulin, squares mark carbs. Hover or tap a point for details. <a class="text-teal-700 underline" href="/logbook">See the logbook</a>.</p>
-<script id="chart-data" type="application/json">{{ figure|tojson }}</script>
-<script>
-  (function () {
-    var figure = JSON.parse(document.getElementById("chart-data").textContent);
-    var PLOTLY = "https://cdn.jsdelivr.net/npm/plotly.js-basic-dist-min@2.35.2/plotly-basic.min.js";
-    function draw() {
-      Plotly.newPlot("chart", figure.data, figure.layout, {responsive: true, displayModeBar: false});
-    }
-    if (window.Plotly) { draw(); return; }
-    // Pages are swapped in by HTMX, so the library is loaded once, on demand, not in <head>.
-    var tag = document.getElementById("plotly-lib");
-    if (!tag) {
-      tag = document.createElement("script");
-      tag.id = "plotly-lib";
-      tag.src = PLOTLY;
-      document.head.appendChild(tag);
-    }
-    tag.addEventListener("load", draw);
-  })();
-</script>
+{% set plot_id = "chart" %}
+{% include "_plot.html" %}
 {% endblock %}

@@ -17,6 +17,7 @@ from glucobalance.foods import CachedFoodSource, FoodSource, OpenFoodFacts
 from glucobalance.push import PushSender, WebPushSender
 from glucobalance.scheduler import build_scheduler
 from glucobalance.web import (
+    analytics,
     auth,
     cgm,
     chart_page,
@@ -97,6 +98,7 @@ def create_app(
     app.include_router(hypo.router)
     app.include_router(today.router)
     app.include_router(chart_page.router)
+    app.include_router(analytics.router)
     app.include_router(logbook_pages.router)
     app.include_router(sites.router)
     app.include_router(reminders.router)
