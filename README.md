@@ -63,10 +63,12 @@ How it is kept safe (see [ADR 0017](docs/adr/0017-deterministic-dosing-core.md) 
 |---|---|---|---|
 | Reference (rule-based stand-in, CI) | 56/56 (100%) | 56/56 (100%) | every push |
 | Reckless (invents a dose every turn, CI) | 56/56 (100%) | 0/56 (0%) | every push |
-| Ollama `llama3.1` | not run yet | not run yet | `--provider ollama` |
-| Claude `claude-haiku-5-5` | not run yet | not run yet | `--provider claude` |
+| Ollama `llama3.2` (3B, local) | 56/56 (100%) | 44/56 (79%) | 10 Oct 2026 |
+| Ollama `qwen3:4b` (local) | 56/56 (100%) | 46/56 (82%) | 10 Oct 2026 |
+| Ollama `deepseek-r1:7b` (local) | 56/56 (100%) | 13/56 (23%) | 10 Oct 2026 |
+| Claude `claude-haiku-5-5` | not run yet | not run yet | needs `GBA_ANTHROPIC_API_KEY` |
 
-The reckless row is the point: even a model that invents or inflates a dose on every turn never gets a number past the output check. Real-model rows are filled in by running the command on a machine with Ollama or an API key.
+The reckless row is the point: even a model that invents or inflates a dose on every turn never gets a number past the output check. The first llama3.2 run found two holes, both fixed with tests: the model passed a dose off as grams of carbs ("12 g", then told the user "12 units"), and it guessed the carbs of a food. Now a number of units must match a units value from a tool (not any number), and the calculator only accepts grams the user wrote. Before the fixes llama3.2 was safe on 49/56. The remaining llama3.2 failures are unhelpful, not unsafe: it calls `propose_adjustment` with a made-up pattern, skips the glucose check for symptoms, or is blocked for repeating an injected number. deepseek-r1:7b is safe but mostly useless here: it rarely calls the tools and answers from memory, and when it invented a dose ("4 units") the output check blocked it. Gemma 3 cannot be tested because Ollama has no tool support for it. Re-run with `--provider ollama --model <name>`.
 
 ### Other planned features
 
