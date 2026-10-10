@@ -20,6 +20,7 @@ dependencies = [
     "pydantic-settings>=2.15.0",
     "python-multipart>=0.0.32",
     "pywebpush>=2.5.0",
+    "scikit-learn>=1.9.1",
     "sqlalchemy>=2.1.4",
     "tzdata>=2026.5",
     "uvicorn>=0.54.0",
@@ -69,7 +70,10 @@ sim = [
     "simglucose>=0.2.11",
 ]
 
-# simglucose, pandas (optional "sim" group), pywebpush and apscheduler ship no type information
+# simglucose, pandas (optional "sim" group), pywebpush, apscheduler, scikit-learn and joblib ship
+# no type information
 [[tool.mypy.overrides]]
-module = ["simglucose.*", "pandas.*", "pywebpush.*", "apscheduler.*"]
+module = [
+    "simglucose.*", "pandas.*", "pywebpush.*", "apscheduler.*", "sklearn.*", "joblib.*",
+]
 ignore_missing_imports = true
