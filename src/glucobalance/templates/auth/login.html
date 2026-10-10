@@ -9,4 +9,14 @@
   {{ button("Log in") }}
 </form>
 <p class="mt-4 text-sm">New here? <a class="text-teal-700 underline" href="/signup">Create an account</a></p>
+{% if demo_mode %}
+<section class="mt-8 rounded border border-teal-300 bg-teal-50 p-4">
+  <h2 class="font-medium">Just looking? Try a demo</h2>
+  <p class="mb-3 text-sm text-slate-700">Two made-up people with three weeks of synthetic data. No sign-up, nothing real.</p>
+  <div class="flex flex-wrap gap-3">
+    <form method="post" action="/demo/pump" hx-boost="false"><button class="rounded bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800">Pump + CGM</button></form>
+    <form method="post" action="/demo/pens" hx-boost="false"><button class="rounded bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800">Pens + glucometer</button></form>
+  </div>
+</section>
+{% endif %}
 {% endblock %}

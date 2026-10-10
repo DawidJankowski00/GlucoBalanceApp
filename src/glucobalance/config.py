@@ -54,6 +54,13 @@ class Settings(BaseSettings):
     # pickle, so only point this at a model you trained yourself.
     forecast_model_path: str | None = None
 
+    # Public demo (Stage 11). On: the login page offers two one-click demo accounts with
+    # synthetic data, those accounts are rebuilt at every start and cannot be deleted.
+    demo_mode: bool = False
+    # Behind a reverse proxy (Render, Fly, nginx) the caller's address is in X-Forwarded-For.
+    # Turn this on only there; otherwise the header can be forged to dodge the rate limits.
+    trust_proxy: bool = False
+
     @property
     def run_scheduler(self) -> bool:
         if self.scheduler_enabled is None:

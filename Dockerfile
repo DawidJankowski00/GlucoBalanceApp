@@ -25,4 +25,4 @@ ENV GBA_FORECAST_MODEL_PATH=/app/models/forecast.joblib
 
 EXPOSE 8000
 # Bring the database schema up to date, then start the app
-CMD ["sh", "-c", "alembic upgrade head && uvicorn glucobalance.main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn glucobalance.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

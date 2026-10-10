@@ -1,0 +1,25 @@
+# Free-tier deployment of the public demo on Render (https://render.com).
+# Push the repository to GitHub, then in Render choose New > Blueprint and select it.
+# The demo holds synthetic data only, so a throwaway SQLite file is enough: the two demo
+# accounts are rebuilt at every start (GBA_DEMO_MODE) and nothing needs to survive a restart.
+services:
+  - type: web
+    name: glucobalance-demo
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: GBA_ENVIRONMENT
+        value: production
+      - key: GBA_SECRET_KEY
+        generateValue: true
+      - key: GBA_DATABASE_URL
+        value: sqlite:////tmp/gba.db
+      - key: GBA_DEMO_MODE
+        value: "true"
+      - key: GBA_TRUST_PROXY
+        value: "true"
+      - key: GBA_LLM_PROVIDER
+        value: none
+      # Optional, for a live assistant in the demo (costs credit; set a spending limit):
+      #   GBA_LLM_PROVIDER=claude and GBA_ANTHROPIC_API_KEY in the Render dashboard.

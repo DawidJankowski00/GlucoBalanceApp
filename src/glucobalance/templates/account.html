@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field %}
+{% block title %}Account · {{ app_name }}{% endblock %}
+{% block content %}
+<h1 class="mb-4 text-2xl font-semibold">Your account and data</h1>
+
+<section class="mb-8">
+  <h2 class="mb-1 font-medium">Export your data</h2>
+  <p class="mb-3 text-sm text-slate-600">Everything the app stores about you: settings, glucose, insulin, carbs, sites, reminders and assistant history. Glucose is in mg/dL and times are in UTC. Passwords, CGM credentials and push keys are never included.</p>
+  <div class="flex gap-3">
+    <a class="rounded bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800" href="/account/export.json" hx-boost="false" download>Download JSON</a>
+    <a class="rounded border border-teal-700 px-4 py-2 font-medium text-teal-800 hover:bg-teal-50" href="/account/export.zip" hx-boost="false" download>Download CSV (zip)</a>
+  </div>
+</section>
+
+<section class="rounded border border-red-300 bg-red-50 p-4">
+  <h2 class="mb-1 font-medium text-red-900">Delete your account</h2>
+  <p class="mb-3 text-sm text-red-900">This permanently deletes your account and every entry, setting, reminder and message. It cannot be undone. Export your data first if you want a copy.</p>
+  <form method="post" action="/account/delete" class="space-y-3" hx-boost="false">
+    {{ field("Type your email to confirm", "confirm_email", "", "email", "required autocomplete=off") }}
+    {% if has_password %}{{ field("Password", "password", "", "password", "required autocomplete=current-password") }}{% endif %}
+    <button class="rounded bg-red-700 px-4 py-2 font-medium text-white hover:bg-red-800">Delete everything</button>
+  </form>
+</section>
+{% endblock %}
